@@ -14,16 +14,16 @@ source bin/activate
 Install requirements and application
 
 ```
-pip install -r mdchecker/requirements.txt
 git clone https://github.com/geobretagne/mdchecker.git mdchecker
+pip install -r mdchecker/requirements.txt
 ```
 
 If you must get through a http proxy, use this instead
 
 ```
-pip install --proxy=http://addr:port/ -r mdchecker/requirements.txt
 git config --global http_proxy=http://addr:port/ 
 git clone https://github.com/geobretagne/mdchecker.git mdchecker
+pip install --proxy=http://addr:port/ -r mdchecker/requirements.txt
 ```
 
 Then deploy application and get into the app dir :
