@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#
+# mode debug
+# YOU MUST SET THIS TO False FOR PRODUCTION
+# otherwise users may execute arbitrary code on your server
+#
+DEBUG = False
+
+#
+# sessions salt
+#
+SECRET_KEY = 'NTVEUZTNEYHZVNTHZAONTZAOVNOAZIONV5HIOZA'
+
+#
+# bind to host and port
+#
+SERVER_NAME = '127.0.0.1:5000'
