@@ -3,6 +3,12 @@ MDChecker quick install
 
 Instructions to get a working MDChecker instance, for dev & testing purpose only.
 
+Install system libraries
+
+```
+sudo apt-get install libxslt1-dev
+```
+
 Deploy and activate a fresh python virtualenv
 
 ```
@@ -11,7 +17,7 @@ cd venv
 source bin/activate
 ```
 
-Install requirements and application
+Install requirements and application inside venv
 
 ```
 git clone https://github.com/geobretagne/mdchecker.git mdchecker
