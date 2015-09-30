@@ -6,7 +6,10 @@ import urllib2
 import base64
 from owslib.csw import CatalogueServiceWeb
 from owslib import fes
+from lxml import etree
+from io import StringIO, BytesIO
 import os
+import urllib
 import logging
 import datetime
 import hashlib
@@ -15,6 +18,29 @@ import shapefile
 import re
 
 logging.basicConfig(level=logging.INFO)
+
+### utility fn #######################################
+def u(s):
+    """
+    decodes utf8
+    """
+    if isinstance(s, str):
+        return s.decode('utf-8')
+    elif isinstance(s, list):
+        return [i.decode('utf-8') for i in s]
+
+
+def xmlGetTextNodes(doc, xpath, namespaces):
+    """
+    shorthand to retrieve serialized text nodes matching a specific xpath
+    """
+    return ', '.join(doc.xpath(xpath, namespaces={
+        'gmd':  u'http://www.isotc211.org/2005/gmd',
+        'gco': u'http://www.isotc211.org/2005/gco'
+    }))
+    
+################################################
+
 
 class Inspirobot(object):
     """Inspirobot (c) geOrchestra project 2014
@@ -177,10 +203,10 @@ class Inspirobot(object):
         return cswpath
 
 
-    def mdcount(self, cswurl, constraints=[]):
+    def mdcount(self, cswurl, constraints=[], startrecord=0, maxharvest=10):
         """Queries the csw and count md matching constraints"""
         csw = CatalogueServiceWeb(cswurl, skip_caps=True)
-        csw.getrecords2(esn='brief', constraints=constraints)
+        csw.getrecords2(esn='brief', constraints=constraints, startposition=startrecord, maxrecords=maxharvest)
         return csw.results
         
 
@@ -226,35 +252,34 @@ class Inspirobot(object):
         return records
 
 
-    def md2shp(self, records, path):
+    def mdToShape(self, records, path):
         """map the md extents in a shapefile"""
         if len(records)>0:
             s = shapefile.Writer(shapefile.POLYGON)
             s.autoBalance = 1
-            s.field('ID', 'C', 50)
-            s.field('TYPE', 'C', 20)
+            s.field('MDID', 'C', 255)
+            s.field('FILEID', 'C', 255)
+            s.field('ORG', 'C', 255)
             s.field('TITLE', 'C', 255)
+            s.field('DATE', 'C', 255)
             for id, rec in records.iteritems():
                 try:
-                    if rec.hasattr(bbox):
-                        xmin, ymin = float(rec.bbox.minx), float(rec.bbox.miny)
-                        xmax, ymax = float(rec.bbox.maxx), float(rec.bbox.maxy)
-                        s.poly(parts=[[
-                            [xmin,ymin,xmax,ymin],
-                            [xmax,ymin,xmax,ymax],
-                            [xmax,ymax,xmin,ymax],
-                            [xmin,ymax,xmin,ymin],
-                            [xmin,ymin,xmax,ymin]
-                        ]], shapeType=shapefile.POLYGON)
-                        s.record(self.u(id), self.u(rec.type), self.u(rec.title))
-                    else:
-                        pass
+                    md = MD(rec.xml)
+                    s.poly(parts=[[
+                        [md.lonmin,md.latmin,md.lonmax,md.latmin],
+                        [md.lonmax,md.latmin,md.lonmax,md.latmax],
+                        [md.lonmax,md.latmax,md.lonmin,md.latmax],
+                        [md.lonmin,md.latmax,md.lonmin,md.latmin],
+                        [md.lonmin,md.latmin,md.lonmax,md.latmin]
+                    ]], shapeType=shapefile.POLYGON)
+                    s.record(self.u(md.MD_Identifier), self.u(md.fileIdentifier), self.u(md.OrganisationName), self.u(md.title), u(md.date))
                 except:
-                    print("error")
+                    logging.error('error for md %s'%(id))
             s.save(path)
             logging.info('%s contains %s md'%(path, len(records)))
         else:
             logging.info('no record found')
+            
 
     def mdPropertyValues(self, cswurl, dname):
         """returns a value list for a property name"""
@@ -265,7 +290,6 @@ class Inspirobot(object):
 
     def parseFilter(self, s):
         """translates inspirobot filter syntax into fes
-        
         for example : 'OrganisationName = DREAL Bretagne && Type = dataset || OrganisationName ~ DDTM 29 && Type = dataset'
         """
         filters = []
@@ -280,6 +304,92 @@ class Inspirobot(object):
                     andgroup.append(fes.PropertyIsLike(propertyname=a[0], literal=a[1]))
             filters.append(andgroup)
         return filters
+        
+        
+### metadata class ######################################
+
+
+class MD:
+    """
+    metadata with unit test methods
+    """
+    def __init__(self, xml):
+        self.namespaces = {
+            'gmd':  u'http://www.isotc211.org/2005/gmd',
+            'gco': u'http://www.isotc211.org/2005/gco'
+        }
+        self.bbox = []
+        self.xml = xml
+        self.md = etree.parse(StringIO(u(xml)))
+        self.fileIdentifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:fileIdentifier/gco:CharacterString/text()', self.namespaces)
+        self.MD_Identifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()', self.namespaces)
+        self.title = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()', self.namespaces)
+        self.OrganisationName = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString/text()', self.namespaces)
+        self.abstract = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract/gco:CharacterString/text()', self.namespaces)
+        self.date = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:DateTime/text()', self.namespaces).split('-')[0]
+        self.contact = {
+            'mails': self.md.xpath('/gmd:MD_Metadata/gmd:contact/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString/text()', namespaces=self.namespaces)
+        }
+        self.reports = []
+        self.score = 100
+        try:
+            self.lonmin = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:westBoundLongitude/gco:Decimal/text()', self.namespaces))
+            self.lonmax = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:eastBoundLongitude/gco:Decimal/text()', self.namespaces))
+            self.latmin = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:southBoundLatitude/gco:Decimal/text()', self.namespaces))
+            self.latmax = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:northBoundLatitude/gco:Decimal/text()', self.namespaces))
+        except:
+            self.lonmin = -180
+            self.lonmax = 180
+            self.latmin =  -90
+            self.latmax = 90
+        
+    def __repr__(self):
+        return self.fileIdentifier
+        
+    def __str__(self):
+        return self.fileIdentifier
+        
+    def getScore(self):
+        score = 100
+        for rep in self.reports:
+            if rep.getLevel() == 'critical':
+                score = score - 100
+            elif rep.getLevel() == 'error':
+                score = score - 25
+            elif rep.getLevel() == 'warning':
+                score = score - 10
+        return score
+    
+    def asDict(self):
+        return {
+            'fileIdentifier': self.fileIdentifier,
+            'MD_Identifier': self.MD_Identifier,
+            'title': self.title,
+            'OrganisationName': self.OrganisationName,
+            'abstract': self.abstract,
+            'date': self.date,
+            'contact': self.contact,
+            'reports': [rep.asDict(['warning', 'error', 'critical']) for rep in self.reports],
+            'score': self.getScore(),
+            'latmin': self.latmin,
+            'latmax': self.latmax,
+            'lonmin': self.lonmin,
+            'lonmax': self.lonmax
+        }
+        
+    def run(self, utests):
+        for utest in utests:
+            utest.run(self.md)
+            results = utest.getReports()
+            for rep in results:
+                if rep.getLevel() == 'critical':
+                    self.score = self.score - 100
+                elif rep.getLevel() == 'error':
+                     self.score =  self.score - 25
+                elif rep.getLevel() == 'warning':
+                     self.score =  self.score - 10
+                self.reports.append(rep)
+
 
 
 class MdUnitTestReport(object):
@@ -334,6 +444,8 @@ class MdUnitTestReport(object):
         
     def __str__(self):
         return "level=%s %s"%(self.getLevel(), self.results)
+
+
 
 
 

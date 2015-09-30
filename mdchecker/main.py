@@ -8,13 +8,11 @@ import copy
 import json
 import operator
 import logging
-from collections import OrderedDict
-from lxml import etree
-from io import StringIO, BytesIO
 from flask import Flask
 from flask import request
 from flask import Response
 from flask import render_template
+from flask import jsonify
 
 from inspirobot import Inspirobot
 from mdchecker import app
@@ -29,9 +27,9 @@ cfg = {
     'xmlurlprefix': 'http://geobretagne.fr/geonetwork/srv/fre/xml_iso19139?uuid=',
     'viewurlprefix': 'http://geobretagne.fr/geonetwork/apps/georchestra/?uuid=',
 
-    'maxrecords': 2000,
-    'maxharvest': 25,
-    'maxmaxharvest': 250,
+    'maxrecords': 20,
+    'maxharvest': 250,
+    'maxmaxharvest': 2000,
     'sortby': 'score',
     'ns': {
         'gmd':  u'http://www.isotc211.org/2005/gmd',
@@ -62,7 +60,7 @@ try:
         f.close()
     cfg.update(json.load(open(appfile)))
 except:
-    app.logger.error(u'missing or bad app.json, using defaults')
+    app.logger.error(u'cant read or write %s, using defaults'%appfile)
 
 # import plugins
 for plugin in cfg['plugins']:
@@ -115,6 +113,9 @@ def getArgsFromQuery(request):
     args = {}
     
     # missing validation
+    args['format'] = request.args.get('format', '')
+    
+    # missing validation
     args['OrganisationName'] = request.args.get('OrganisationName', '')
     
     # missing validation
@@ -131,109 +132,18 @@ def getArgsFromQuery(request):
     return args
 
 
-### metadata class ######################################
-
-
-class MD:
-    """
-    metadata with unit test methods
-    """
-    def __init__(self, xml):
-        self.xml = xml
-        self.md = etree.parse(StringIO(u(xml)))
-        self.fileIdentifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:fileIdentifier/gco:CharacterString/text()')
-        self.MD_Identifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()')
-        self.title = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()')
-        self.OrganisationName = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString/text()')
-        self.abstract = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract/gco:CharacterString/text()')
-        self.date = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:dateStamp/gco:DateTime/text()').split('-')[0]
-        self.contact = {
-            'mails': self.md.xpath('/gmd:MD_Metadata/gmd:contact/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString/text()', namespaces=cfg['ns'])
-        }
-        self.reports = []
-        self.score = 100
-
-    def __repr__(self):
-        return self.fileIdentifier
-        
-    def __str__(self):
-        return self.fileIdentifier
-        
-    def getScore(self):
-        score = 100
-        for rep in self.reports:
-            if rep.getLevel() == 'critical':
-                score = score - 100
-            elif rep.getLevel() == 'error':
-                score = score - 25
-            elif rep.getLevel() == 'warning':
-                score = score - 10
-        return score
-    
-    def asDict(self):
-        return {
-            'fileIdentifier': self.fileIdentifier,
-            'MD_Identifier': self.MD_Identifier,
-            'title': self.title,
-            'OrganisationName': self.OrganisationName,
-            'abstract': self.abstract,
-            'date': self.date,
-            'contact': self.contact,
-            'reports': [rep.asDict(['warning', 'error', 'critical']) for rep in self.reports],
-            'score': self.getScore()
-        }
-        
-    def run(self, utests):
-        for utest in utests:
-            utest.run(self.md)
-            results = utest.getReports()
-            for rep in results:
-                if rep.getLevel() == 'critical':
-                    self.score = self.score - 100
-                elif rep.getLevel() == 'error':
-                     self.score =  self.score - 25
-                elif rep.getLevel() == 'warning':
-                     self.score =  self.score - 10
-                self.reports.append(rep)
-                
-    def getMailtoQS(self):
-        return urllib.urlencode({
-            'subject': ('[inspirobot][%s/100]-%s'%(self.getScore(),self.title)).encode('utf-8'),
-            'body': cfg["mail_md"]%(cfg['viewurlprefix'],self.fileIdentifier,self.score)
-        })
-
-### end class ######################################
-
-
-
-
-
-@app.route("/")
-def index():
-    args = {
-        'OrganisationName': '',
-        'anytext': '',
-        'maxharvest': cfg['maxharvest'],
-        'sortby': cfg['sortby'],
-        'nextrecord': 0,
-        'id':'',
-        'roles': []
-    }
-    mdUnitTests = getMdUnitTests(cfg)
+def runTests(args, mdUnitTests):
+    """perform tests, return metadatas, count, score"""
     metadatas = []
     count = {'matches': 0, 'returned': 0}
     score = 0
-    pageUrls = []
-
-    # querystring parser
-    args.update(getArgsFromQuery(request))
 
     # inspirobot instance
     inspirobot = Inspirobot.Inspirobot()
     if cfg.get('proxy', ''):
         inspirobot.setproxy(cfg['proxy'])
 
-    if args['OrganisationName'] or args['anytext'] or args['id']:
+    if args['OrganisationName'] or args['anytext'] or args['id'] or args['format'] == 'json':
         # owslib constraint
         constraintstr = u"Type = dataset  && anytext = %(anytext)s"%args
         if args['OrganisationName']:
@@ -241,10 +151,10 @@ def index():
         if args['id']:
             constraintstr += u" && Identifier = %(id)s"%args
         constraints = inspirobot.parseFilter(constraintstr)
-        
+
         # get match count
-        count = inspirobot.mdcount(cfg['cswurl'], constraints=constraints)
-        
+        count = inspirobot.mdcount(cfg['cswurl'], constraints=constraints, startrecord=args['nextrecord'], maxharvest=args['maxharvest'])
+
         # get metadatas
         records =  inspirobot.mdsearch(
             cfg['cswurl'],
@@ -257,7 +167,7 @@ def index():
         
         # run tests
         for id,rec in records.iteritems():
-            meta = MD(rec.xml)
+            meta = Inspirobot.MD(rec.xml)
             meta.run(mdUnitTests)
             metadatas.append(meta)
             
@@ -274,11 +184,82 @@ def index():
             metadatas.sort(key=operator.attrgetter('OrganisationName'))
         elif args['sortby'] == 'date':
             metadatas.sort(key=operator.attrgetter('date'))
+        
+        return metadatas, count, score
 
-        # paging
+
+### routes ######################################
+@app.route('/md/')
+@app.route('/md/<id>')
+@app.route('/md/<id>/<format>')
+def byId(id='', format='html'):
+    args = {
+        'OrganisationName': '',
+        'anytext': '',
+        'maxharvest': cfg['maxharvest'],
+        'sortby': cfg['sortby'],
+        'nextrecord': 0,
+        'id': id,
+        'roles': [],
+        'format': format
+    }
+    mdUnitTests = getMdUnitTests(cfg)
+    metadatas, count, score = runTests(args, mdUnitTests)
+    
+    if args['format'] == 'json':
+        return jsonify(
+            matches =  count,
+            score = score,
+            metadatas = [md.asDict() for md in metadatas]
+        )
+    else:
+        # paging for html
         pageUrls = [(n, getPermalink({'OrganisationName': args['OrganisationName'], 'nextrecord':n*args['maxharvest'], 'maxharvest':args['maxharvest']}))
             for n in range(1+count['matches'] //args['maxharvest'])
         ]
-    
-    return render_template('inspirobot.html', cfg=cfg, args=args, score=score, metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
+        return render_template('inspirobot.html', cfg=cfg, args=args, score=score, metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
+
+
+
+
+
+@app.route("/")
+def index():
+    args = {
+        'OrganisationName': '',
+        'anytext': '',
+        'maxharvest': cfg['maxharvest'],
+        'sortby': cfg['sortby'],
+        'nextrecord': 0,
+        'id':'',
+        'roles': [],
+        'format': 'html'
+    }
+    mdUnitTests = getMdUnitTests(cfg)
+    metadatas = []
+    count = {'matches': 0, 'returned': 0}
+    score = 0
+
+    # querystring parser
+    args.update(getArgsFromQuery(request))
+
+
+    if args['OrganisationName'] or args['anytext'] or args['id'] or args['format'] == 'json':
+        metadatas, count, score = runTests(args, mdUnitTests)
+
+
+
+    if args['format'] == 'json':
+        return jsonify(
+            matches =  count,
+            score = score,
+            metadatas = [md.asDict() for md in metadatas]
+        )
+    else:
+        # paging for html
+        pageUrls = [(n, getPermalink({'OrganisationName': args['OrganisationName'], 'nextrecord':n*args['maxharvest'], 'maxharvest':args['maxharvest']}))
+            for n in range(1+count['matches'] //args['maxharvest'])
+        ]
+        return render_template('inspirobot.html', cfg=cfg, args=args, score=score, metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
+
 
