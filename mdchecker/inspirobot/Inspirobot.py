@@ -7,7 +7,6 @@ import base64
 from owslib.csw import CatalogueServiceWeb
 from owslib import fes
 from lxml import etree
-from io import StringIO, BytesIO
 import os
 import urllib
 import logging
@@ -320,7 +319,7 @@ class MD:
         }
         self.bbox = []
         self.xml = xml
-        self.md = etree.parse(StringIO(u(xml)))
+        self.md = etree.XML(u(xml))
         self.fileIdentifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:fileIdentifier/gco:CharacterString/text()', self.namespaces)
         self.MD_Identifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()', self.namespaces)
         self.title = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()', self.namespaces)
