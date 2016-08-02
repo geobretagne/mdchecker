@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import imp
-import re
 import os
 import urllib
-import copy
 import json
 import operator
-import logging
-from flask import Flask
 from flask import request
-from flask import Response
 from flask import render_template
 from flask import jsonify
 
