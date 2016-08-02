@@ -205,10 +205,9 @@ class Inspirobot(object):
     def mdcount(self, cswurl, constraints=[], startrecord=0, maxharvest=10):
         """Queries the csw and count md matching constraints"""
         csw = CatalogueServiceWeb(cswurl, skip_caps=True)
-        csw.getrecords2(esn='brief', constraints=constraints, startposition=startrecord, maxrecords=maxharvest)
+        csw.getrecords2(esn='brief', constraints=constraints, startposition=startrecord, maxrecords=maxharvest, resulttype='hits')
         return csw.results
-        
-
+    
 
     def mdsearch(self, cswurl, esn='summary', constraints=[], startrecord=0, maxrecords=10, maxharvest=20):
         tstart = datetime.datetime.now()
