@@ -3,13 +3,17 @@
 from mdchecker.inspirobot import Inspirobot
 import re
 
-class MdUnitTestMD_Identifier(Inspirobot.MdUnitTest):
+
+class MdUnitTestMdIdentifier(Inspirobot.MdUnitTest):
     """check MD_Identifier'"""
     def set(self):
-        self.name='ID'
-        self.abstract=u"""Vérification MD_Identifier. On vérifie qu'il est présent et qu'il se conforme à une expression régulière."""
+        self.name = 'ID'
+        self.abstract = u"Vérification MD_Identifier. " \
+                        u"On vérifie qu'il est présent et qu'il se conforme à une expression régulière."
         self.xpath = {
-            'MD_Identifier': u"/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()"
+            'MD_Identifier': u"/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/"
+                             u"gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/"
+                             u"gmd:code/gco:CharacterString/text()"
         }
         self.re = {
             'MD_Identifier': r'^[A-Za-z0-9-_\.\/:\?=&]+$'
@@ -17,11 +21,11 @@ class MdUnitTestMD_Identifier(Inspirobot.MdUnitTest):
     
     def test(self, md):
         rep = Inspirobot.MdUnitTestReport(self.name, self.abstract)
-        MD_Identifier = md.xpath(self.xpath['MD_Identifier'], namespaces=self.cfg['ns'])
-        if len(MD_Identifier)!=1:
-            rep.addResult('error', u'nb de MD_Identifier incorrect : %s'%len(MD_Identifier))
-        elif not(re.match(self.re['MD_Identifier'], MD_Identifier[0], re.I)):
-            rep.addResult('warning', u'format MD_Identifier incorrect : %s'%MD_Identifier[0])
+        md_identifier = md.xpath(self.xpath['MD_Identifier'], namespaces=self.cfg['ns'])
+        if len(md_identifier) != 1:
+            rep.addResult('error', u'nb de MD_Identifier incorrect : %s' % len(md_identifier))
+        elif not(re.match(self.re['MD_Identifier'], md_identifier[0], re.I)):
+            rep.addResult('warning', u'format MD_Identifier incorrect : %s' % md_identifier[0])
         else:
             rep.addResult('debug', u'MD_Identifier OK')
         self.addReport(rep)

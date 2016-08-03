@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import argparse
 import urllib2
-import base64
 from owslib.csw import CatalogueServiceWeb
 from owslib import fes
 from lxml import etree
 import os
-import urllib
 import logging
 import datetime
 import hashlib
 import json
 import shapefile
-import re
 
 logging.basicConfig(level=logging.INFO)
+
 
 ### utility fn #######################################
 def u(s):
@@ -84,7 +81,6 @@ class Inspirobot(object):
         'HasSecurityConstraints',
         'KeywordType',
         'Abstract',
-        #
         'Relation',
         'AccessConstraints',
         'ResponsiblePartyRole',
@@ -114,7 +110,7 @@ class Inspirobot(object):
             if os.path.isfile(manpath):
                 manifest = json.loads(open(manpath).read())
                 self.cswlist[manifest['cswurl']] = manifest
-                logging.info('%s %s md cached'%(manifest['cswurl'], len(os.listdir(cswpath))))
+                logging.info('%s %s md cached' % (manifest['cswurl'], len(os.listdir(cswpath))))
 
     def getQueryables(self):
         return self.QUERYABLES
@@ -122,33 +118,29 @@ class Inspirobot(object):
     def setproxy(self, proxy):
         """Sets an outgoing http proxy"""
         if proxy:
-            proxyHandler = urllib2.ProxyHandler({"http" : proxy, "https": proxy})
+            proxyHandler = urllib2.ProxyHandler({"http": proxy, "https": proxy})
             opener = urllib2.build_opener(proxyHandler)
             urllib2.install_opener(opener)
-            logging.debug('%s outgoing proxy defined'%proxy)
-
+            logging.debug('%s outgoing proxy defined' % proxy)
 
     def u(self, s):
         """Converts string to unicode string"""
         return s.encode('utf-8') if bool(s) else ''
 
-
     def mdcache(self, cswurl, constraints=[], maxrecords=10, maxharvest=20):
         """Fills the cache from a csw"""
         
         # cache directory for this csw
-        cswpath = ''
-        cswsig = ''
-        if self.cswlist.has_key(cswurl):
+        if cswurl in self.cswlist:
             cswsig = self.cswlist[cswurl]['cswsig']
             cswpath = os.path.join(self.cachepath, cswsig)
         else:
             cswsig = hashlib.md5(cswurl).hexdigest()
-            logging.info('%s : new signature %s'%(cswurl, cswsig))
+            logging.info('%s : new signature %s' % (cswurl, cswsig))
             cswpath = os.path.join(self.cachepath, cswsig)
             if not(os.path.isdir(cswpath)):
                 os.makedirs(cswpath)
-            logging.info('%s %s created'%(cswurl, cswpath))
+            logging.info('%s %s created' % (cswurl, cswpath))
             
         manifest = {
             'cswsig': cswsig,
@@ -162,97 +154,104 @@ class Inspirobot(object):
         f = open(os.path.join(cswpath, self.MANIFEST), 'w')
         f.write(json.dumps(manifest))
         f.close()
-        
-        
-        logging.info('loading max %s md from %s'%(maxharvest, cswurl))
+
+        logging.info('loading max %s md from %s' % (maxharvest, cswurl))
         csw = CatalogueServiceWeb(cswurl, skip_caps=True)
         first = True
-        more = True
         nextrecord = 0
         count = 0
-        while more:
-            if not(first):
+
+        while True:
+            if not first:
                 nextrecord = csw.results['nextrecord']
-            if count+maxrecords > maxharvest:
+
+            if count + maxrecords > maxharvest:
                 maxrecords = maxharvest - count
-            csw.getrecords2(esn='full', constraints=constraints, startposition=nextrecord, maxrecords=maxrecords, outputschema=self.OUTPUTSCHEMA)
-            if csw.results['matches']==0:
-                logging.info('0 md found from %s'%cswurl)
-                more = False
+
+            csw.getrecords2(
+                esn='full', constraints=constraints, startposition=nextrecord,
+                maxrecords=maxrecords, outputschema=self.OUTPUTSCHEMA)
+
+            if csw.results['matches'] == 0:
+                logging.info('0 md found from %s' % cswurl)
                 break
             else:
                 first = False
                 # fetch records
-                for id, rec in csw.records.iteritems():
+                for rec_id, rec in csw.records.iteritems():
                     count += 1
                     logging.info(str(int(float(count)/min(maxharvest, csw.results['matches'])*100))+'%')
-                    filename = os.path.join(cswpath, id)
+                    filename = os.path.join(cswpath, rec_id)
                     os.path.join(filename)
-                    f=open(filename, 'w')
+                    f = open(filename, 'w')
                     f.write(rec.xml)
                     f.close()
             
                 # break if no records, beyond maxrecords or matches
                 if csw.results['nextrecord'] == 0 \
-                    or csw.results['returned'] == 0 \
-                    or csw.results['nextrecord'] > csw.results['matches'] \
-                    or csw.results['nextrecord'] > maxharvest:
-                    more = False
-                    logging.info('%s md loaded from %s'%(count, cswurl))
-        return cswpath
+                        or csw.results['returned'] == 0 \
+                        or csw.results['nextrecord'] > csw.results['matches'] \
+                        or csw.results['nextrecord'] > maxharvest:
+                    logging.info('%s md loaded from %s' % (count, cswurl))
+                    break
 
+        return cswpath
 
     def mdcount(self, cswurl, constraints=[], startrecord=0, maxharvest=10):
         """Queries the csw and count md matching constraints"""
         csw = CatalogueServiceWeb(cswurl, skip_caps=True)
-        csw.getrecords2(esn='brief', constraints=constraints, startposition=startrecord, maxrecords=maxharvest, resulttype='hits')
+        csw.getrecords2(
+            esn='brief', constraints=constraints, startposition=startrecord, maxrecords=maxharvest, resulttype='hits')
         return csw.results
-    
 
     def mdsearch(self, cswurl, esn='summary', constraints=[], startrecord=0, maxrecords=10, maxharvest=20):
         tstart = datetime.datetime.now()
         """Queries a csw to retrieve md ids matching constraints"""
         records = {}
-        logging.info('searching max %s md from %s'%(maxharvest, cswurl))
+
+        logging.info('searching max %s md from %s' % (maxharvest, cswurl))
         csw = CatalogueServiceWeb(cswurl, skip_caps=True)
         first = True
-        more = True
         nextrecord = startrecord
         count = 0
-        while more:
-            if not(first):
+
+        while True:
+            if not first:
                 nextrecord = csw.results['nextrecord']
-            if count+maxrecords > maxharvest:
-                maxrecords = maxharvest - count # retrieve exactly maxharvest md
-            csw.getrecords2(esn=esn, constraints=constraints, startposition=nextrecord, maxrecords=maxrecords, outputschema=self.OUTPUTSCHEMA)
-            if csw.results['matches']==0:
-                logging.info('0 md found from %s'%cswurl)
-                more = False
+
+            if count + maxrecords > maxharvest:
+                maxrecords = maxharvest - count     # retrieve exactly maxharvest md
+
+            csw.getrecords2(
+                esn=esn, constraints=constraints, startposition=nextrecord,
+                maxrecords=maxrecords, outputschema=self.OUTPUTSCHEMA)
+
+            if csw.results['matches'] == 0:
+                logging.info('0 md found from %s' % cswurl)
                 break
             else:
-
                 first = False
                 # fetch records
-                for id, rec in csw.records.iteritems():
+                for rec_id, rec in csw.records.iteritems():
                     count += 1
                     percent = int(float(count)/min(maxharvest, csw.results['matches'])*100)
-                    logging.debug('%s%% %s'%(percent, id))
-                    records[id] = rec
+                    logging.debug('%s%% %s' % (percent, rec_id))
+                    records[rec_id] = rec
 
                 # get out if no records or beyond maxrecords
                 if csw.results['nextrecord'] == 0 \
-                    or csw.results['returned'] == 0 \
-                    or csw.results['nextrecord'] > csw.results['matches'] \
-                    or csw.results['nextrecord'] > maxharvest:
-                    more = False
+                        or csw.results['returned'] == 0 \
+                        or csw.results['nextrecord'] > csw.results['matches'] \
+                        or csw.results['nextrecord'] > maxharvest:
                     d = (datetime.datetime.now() - tstart).total_seconds()
-                    logging.info('%s md found from %s in %d s'%(count, cswurl, d))
-        return records
+                    logging.info('%s md found from %s in %d s' % (count, cswurl, d))
+                    break
 
+        return records
 
     def mdToShape(self, records, path):
         """map the md extents in a shapefile"""
-        if len(records)>0:
+        if len(records) > 0:
             s = shapefile.Writer(shapefile.POLYGON)
             s.autoBalance = 1
             s.field('MDID', 'C', 255)
@@ -260,24 +259,24 @@ class Inspirobot(object):
             s.field('ORG', 'C', 255)
             s.field('TITLE', 'C', 255)
             s.field('DATE', 'C', 255)
-            for id, rec in records.iteritems():
+            for rec_id, rec in records.iteritems():
                 try:
                     md = MD(rec.xml)
                     s.poly(parts=[[
-                        [md.lonmin,md.latmin,md.lonmax,md.latmin],
-                        [md.lonmax,md.latmin,md.lonmax,md.latmax],
-                        [md.lonmax,md.latmax,md.lonmin,md.latmax],
-                        [md.lonmin,md.latmax,md.lonmin,md.latmin],
-                        [md.lonmin,md.latmin,md.lonmax,md.latmin]
+                        [md.lonmin, md.latmin, md.lonmax, md.latmin],
+                        [md.lonmax, md.latmin, md.lonmax, md.latmax],
+                        [md.lonmax, md.latmax, md.lonmin, md.latmax],
+                        [md.lonmin, md.latmax, md.lonmin, md.latmin],
+                        [md.lonmin, md.latmin, md.lonmax, md.latmin]
                     ]], shapeType=shapefile.POLYGON)
-                    s.record(self.u(md.MD_Identifier), self.u(md.fileIdentifier), self.u(md.OrganisationName), self.u(md.title), u(md.date))
+                    s.record(self.u(md.MD_Identifier), self.u(md.fileIdentifier), self.u(md.OrganisationName),
+                             self.u(md.title), u(md.date))
                 except:
-                    logging.error('error for md %s'%(id))
+                    logging.error('error for md %s' % id)
             s.save(path)
-            logging.info('%s contains %s md'%(path, len(records)))
+            logging.info('%s contains %s md' % (path, len(records)))
         else:
             logging.info('no record found')
-            
 
     def mdPropertyValues(self, cswurl, dname):
         """returns a value list for a property name"""
@@ -285,10 +284,10 @@ class Inspirobot(object):
         csw.getdomain(dname, dtype='property')
         return csw.results
 
-
     def parseFilter(self, s):
         """translates inspirobot filter syntax into fes
-        for example : 'OrganisationName = DREAL Bretagne && Type = dataset || OrganisationName ~ DDTM 29 && Type = dataset'
+        for example:
+            'OrganisationName = DREAL Bretagne && Type = dataset || OrganisationName ~ DDTM 29 && Type = dataset'
         """
         filters = []
         for f_or in [x.split('&&') for x in s.split('||')]:
@@ -297,7 +296,7 @@ class Inspirobot(object):
                 if '=' in f_and:
                     a = [s.strip() for s in f_and.split('=')]
                     andgroup.append(fes.PropertyIsEqualTo(propertyname=a[0], literal=a[1]))
-                elif ('~') in f_and:
+                elif '~' in f_and:
                     a = [s.strip() for s in f_and.split('~')]
                     andgroup.append(fes.PropertyIsLike(propertyname=a[0], literal=a[1]))
             filters.append(andgroup)
@@ -319,26 +318,76 @@ class MD:
         self.bbox = []
         self.xml = xml
         self.md = etree.XML(u(xml))
-        self.fileIdentifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:fileIdentifier/gco:CharacterString/text()', self.namespaces)
-        self.MD_Identifier = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()', self.namespaces)
-        self.title = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()', self.namespaces)
-        self.OrganisationName = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:pointOfContact/gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString/text()', self.namespaces)
-        self.abstract = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:abstract/gco:CharacterString/text()', self.namespaces)
-        self.date = xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date/gmd:CI_Date/gmd:date/gco:DateTime/text()', self.namespaces).split('-')[0]
+        self.fileIdentifier = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:fileIdentifier/gco:CharacterString/text()',
+            self.namespaces)
+        self.MD_Identifier = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:identificationInfo/'
+            'gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/'
+            'gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString/text()',
+            self.namespaces)
+        self.title = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:identificationInfo/'
+            'gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/'
+            'gmd:title/gco:CharacterString/text()',
+            self.namespaces)
+        self.OrganisationName = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:identificationInfo/'
+            'gmd:MD_DataIdentification/gmd:pointOfContact/'
+            'gmd:CI_ResponsibleParty/gmd:organisationName/gco:CharacterString/text()',
+            self.namespaces)
+        self.abstract = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:identificationInfo/'
+            'gmd:MD_DataIdentification/gmd:abstract/gco:CharacterString/text()',
+            self.namespaces)
+        self.date = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:identificationInfo/'
+            'gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/'
+            'gmd:date/gmd:CI_Date/gmd:date/gco:DateTime/text()',
+            self.namespaces).split('-')[0]
         self.contact = {
-            'mails': self.md.xpath('/gmd:MD_Metadata/gmd:contact/gmd:CI_ResponsibleParty/gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString/text()', namespaces=self.namespaces)
+            'mails': self.md.xpath(
+                '/gmd:MD_Metadata/gmd:contact/gmd:CI_ResponsibleParty/gmd:contactInfo/'
+                'gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString/text()',
+                namespaces=self.namespaces)
         }
         self.reports = []
         self.score = 100
         try:
-            self.lonmin = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:westBoundLongitude/gco:Decimal/text()', self.namespaces))
-            self.lonmax = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:eastBoundLongitude/gco:Decimal/text()', self.namespaces))
-            self.latmin = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:southBoundLatitude/gco:Decimal/text()', self.namespaces))
-            self.latmax = float(xmlGetTextNodes(self.md, '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/gmd:northBoundLatitude/gco:Decimal/text()', self.namespaces))
+            self.lonmin = float(xmlGetTextNodes(
+                self.md,
+                '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/'
+                'gmd:westBoundLongitude/gco:Decimal/text()',
+                self.namespaces))
+            self.lonmax = float(xmlGetTextNodes(
+                self.md,
+                '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/'
+                'gmd:eastBoundLongitude/gco:Decimal/text()',
+                self.namespaces))
+            self.latmin = float(xmlGetTextNodes(
+                self.md,
+                '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/'
+                'gmd:southBoundLatitude/gco:Decimal/text()',
+                self.namespaces))
+            self.latmax = float(xmlGetTextNodes(
+                self.md,
+                '/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:extent/gmd:EX_Extent/gmd:geographicElement/gmd:EX_GeographicBoundingBox/'
+                'gmd:northBoundLatitude/gco:Decimal/text()',
+                self.namespaces))
         except:
             self.lonmin = -180
             self.lonmax = 180
-            self.latmin =  -90
+            self.latmin = -90
             self.latmax = 90
         
     def __repr__(self):
@@ -351,11 +400,11 @@ class MD:
         score = 100
         for rep in self.reports:
             if rep.getLevel() == 'critical':
-                score = score - 100
+                score -= 100
             elif rep.getLevel() == 'error':
-                score = score - 25
+                score -= 25
             elif rep.getLevel() == 'warning':
-                score = score - 10
+                score -= 10
         return score
     
     def asDict(self):
@@ -381,13 +430,12 @@ class MD:
             results = utest.getReports()
             for rep in results:
                 if rep.getLevel() == 'critical':
-                    self.score = self.score - 100
+                    self.score -= 100
                 elif rep.getLevel() == 'error':
-                     self.score =  self.score - 25
+                    self.score -= 25
                 elif rep.getLevel() == 'warning':
-                     self.score =  self.score - 10
+                    self.score -= 10
                 self.reports.append(rep)
-
 
 
 class MdUnitTestReport(object):
@@ -424,7 +472,7 @@ class MdUnitTestReport(object):
         else:
             return '#'
     
-    def asDict(self, levels = ['debug', 'info', 'warning', 'error', 'critical']):
+    def asDict(self, levels=['debug', 'info', 'warning', 'error', 'critical']):
         return {
             "name": self.name,
             "results": filter(lambda x: x[0] in levels, self.results)
@@ -441,11 +489,7 @@ class MdUnitTestReport(object):
         return str(self.results)
         
     def __str__(self):
-        return "level=%s %s"%(self.getLevel(), self.results)
-
-
-
-
+        return "level=%s %s" % (self.getLevel(), self.results)
 
 
 class MdUnitTest(object):
@@ -462,7 +506,6 @@ class MdUnitTest(object):
 
     def __repr__(self):
         return self.name
-        
 
     def clearReports(self):
         self.reports = []
