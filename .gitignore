@@ -1,6 +1,9 @@
 conf/
 *.pyc
 
+# database file
+db/*
+
 # virtualenv dir
 venv/*
 

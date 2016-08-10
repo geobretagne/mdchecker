@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+    <head>
+        <title>geOrchestra inspirobot - MdChecker</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        
+        <!-- jquery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <style rel="stylesheet" type="text/css">
+
+
+hr.clear {
+    clear: both;
+}
+
+.md-md {
+    font-size: x-small;
+    height: 16em;
+    overflow: auto;
+}
+
+.md-md.perfect {
+    background-color: #ccffcc;
+}
+.md-md.good {
+    background-color: #fff;
+}
+.md-md.average {
+    background-color: #ffffcc;
+}
+.md-md.bad {
+    background-color: #ffddcc;
+}
+.md-md.ugly {
+    background-color: #ffbbcc;
+}
+
+.md-md p {
+    padding: 0;
+    margin: 0;
+}
+.md-score {
+    padding: 0.2em;
+    margin: 0;
+    float: right;
+    text-align: center;
+}
+
+.md-retest.loading {
+    background-color: #00f !important;
+}
+
+.md-retest.error {
+    background-color: #f00 !important;
+}
+
+.md-bt {
+    text-decoration: none;
+}
+.md-contact, .md-contact a {
+    color: #666;
+    text-decoration: none;
+}
+.md-title {
+    padding: 2px;
+}
+
+
+/* tests */
+
+.md-test {
+    line-height: 1.8em;
+}
+
+.md-test a {
+    padding: 0.1em;
+    margin: 0  0.1em;
+    color: #333;
+    background-color: #ccc;
+    border: 1px solid #666;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.md-test a.critical {
+    color: #fff;
+    background-color: #000;
+}
+.md-test a.error {
+    color: #fff;
+    background-color: #f00;
+}
+.md-test a.warning {
+    color: #fff;
+    background-color: #feba00;
+}
+.md-test a.info {
+    color: #fff;
+    background-color: #090;
+}
+.md-test a.debug {
+    color: #666;
+    background-color: #ccc;
+}
+
+.md-test .popover-title,.md-test .popover-content {
+    font-size: small;
+}
+        </style>
+        <script>
+$(function () {
+    /**
+     *  single metadata reload
+     */
+    function handleMdReload(e) {
+        url = $(e.target).attr('href');
+        selector = '#'+url.split('/')[2];
+        $(selector + ' .badge').addClass('loading');
+        $.ajax({
+            url: url,
+            dataType: 'html',
+            success: function(data) {
+                mdnew = $(data).find(selector);
+                if (mdnew) {
+                    $(selector).replaceWith(mdnew);
+                    $(selector + " a.md-retest").click(handleMdReload);
+                }
+                else {
+                    $(selector + ' .badge').removeClass('loading');
+                    $(selector + ' .badge').addClass('error');
+                }
+            },
+            failure: function() {
+                $(selector + ' .badge').removeClass('loading');
+                $(selector + ' .badge').addClass('error');
+            }
+        });
+        return false;
+    }
+
+    /**
+     *  ui init
+     */
+
+    $("a.md-retest").click(handleMdReload);
+    $(".md-test a").popover({
+        html: true,
+        content: function() {
+            return $($(this).children('span')).html();
+        },
+        placement: "bottom",
+        trigger: "hover focus"}
+    );
+});
+    </script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-static-top">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Inspirobot MdChecker - score {{score}}/100</a>
+                </div>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="container-fluid">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Dernières sessions</div>
+                <div class="panel-body">
+                    {% if sessions|length > 0 %}
+                    <table class="table table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Catalogue</th>
+                                <th>Filtre</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td>{{ session.id }}</td>
+                                <td>{{ session.cat_url }}</td>
+                                <td>{{ session.filter }}</td>
+                                <td>{{ session.date }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p>Aucune session de test n'est présente en base de données</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>
