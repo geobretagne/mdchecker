@@ -5,12 +5,22 @@ import os
 import urllib
 import json
 import operator
+import datetime
+
 from flask import request
 from flask import render_template
 from flask import jsonify
 
 from inspirobot import Inspirobot
+
 from mdchecker import app
+from mdchecker import db
+
+from models.models import UnitTestResult
+from models.models import ResourceMd
+from models.models import TestSession
+from models.models import MdReport
+
 
 # default configuration
 # if you want to change this, copy server.cfg.DIST into server.cfg for werkzeug config
@@ -131,6 +141,11 @@ def getArgsFromQuery(request):
     return args
 
 
+def doWeNeedToProcessRequest(request):
+    return (request.args.has_key('OrganisationName') or request.args.has_key('anytext') or
+        request.args.has_key('id') or request.args.has_key('format'))
+
+
 def runTests(args, mdUnitTests):
     """perform tests, return metadatas, count, score"""
     metadatas = []
@@ -142,7 +157,15 @@ def runTests(args, mdUnitTests):
     if cfg.get('proxy', ''):
         inspirobot.setproxy(cfg['proxy'])
 
+    if args['anytext'].strip() == "":
+        args['anytext'] = "*"
+
+    if args['OrganisationName'].strip() == "":
+        args['OrganisationName'] = "*"
+
+    #do we still need this test?
     if args['OrganisationName'] or args['anytext'] or args['id'] or args['format'] == 'json':
+
         # owslib constraint
         constraintstr = u"Type = dataset  && anytext = %(anytext)s" % args
         if args['OrganisationName']:
@@ -164,13 +187,72 @@ def runTests(args, mdUnitTests):
             maxrecords=cfg['maxrecords'],
             maxharvest=args['maxharvest']
         )
-        
+
+        # Test session db record
+        test_datetime = datetime.datetime.utcnow()
+        ts = TestSession(
+            cat_url=cfg['cswurl'],
+            filter=constraintstr,
+            date=datetime.datetime.utcnow()
+        )
+        db.session.add(ts)
+
         # run tests
         for rec_id, rec in records.iteritems():
             meta = Inspirobot.MD(rec.xml)
             meta.run(mdUnitTests)
             metadatas.append(meta)
-        
+
+            # resource metadata db record
+            # look for an existing metadata with the same cat_url and file_id
+            md = ResourceMd.query.filter_by(
+                cat_url=cfg['cswurl'],
+                file_id=meta.fileIdentifier
+            ).first()
+            if md is None and meta.MD_Identifier.strip() != "":
+                md = ResourceMd.query.filter_by(
+                    cat_url=cfg['cswurl'],
+                    res_uri=meta.MD_Identifier
+                ).first()
+            if md is None:
+                md = ResourceMd(
+                    cat_url=cfg['cswurl'],
+                    file_id=meta.fileIdentifier,
+                    res_uri=meta.MD_Identifier,
+                    res_title=meta.title,
+                    res_abstract=meta.abstract,
+                    res_organisation_name=meta.OrganisationName
+                )
+                db.session.add(md)
+            else:
+                md.file_id = meta.fileIdentifier
+                md.res_uri = meta.MD_Identifier
+                md.res_title = meta.title
+                md.res_abstract = meta.abstract
+                md.res_organisation_name = meta.OrganisationName
+
+            # report for on medatada record and one test session in db
+            mr = MdReport(
+                test_session=ts,
+                md=md,
+                score=meta.score
+            )
+            db.session.add(mr)
+
+            for report in meta.reports:
+
+                for result in report.results:
+
+                    # result of one unit test in db
+                    unit_test_result = UnitTestResult(
+                        md_report = mr,
+                        test_id = report.name,
+                        test_result_level = result[0],
+                        test_result_text = result[1]
+                    )
+                    db.session.add(unit_test_result)
+        db.session.commit()
+
         score = sum(md.score for md in metadatas) / max(len(metadatas), 1)
             
         # metadata order
@@ -243,10 +325,13 @@ def index():
     score = 0
 
     # querystring parser
+    request_args = getArgsFromQuery(request)
     args.update(getArgsFromQuery(request))
 
-    if args['OrganisationName'] or args['anytext'] or args['id'] or args['format'] == 'json':
+    if doWeNeedToProcessRequest(request):
         metadatas, count, score = runTests(args, mdUnitTests)
+    # if args['OrganisationName'] or args['anytext'] or args['id'] or args['format'] == 'json':
+    #     metadatas, count, score = runTests(args, mdUnitTests)
 
     if args['format'] == 'json':
         return jsonify(
@@ -266,3 +351,11 @@ def index():
         return render_template(
             'inspirobot.html', cfg=cfg, args=args, score=score,
             metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
+
+@app.route("/session")
+def session_list():
+
+    sessions = TestSession.query.all()
+
+    return render_template(
+        'session_list.html', cfg=cfg, sessions=sessions)
