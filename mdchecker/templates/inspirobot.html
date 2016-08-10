@@ -186,86 +186,89 @@ $(function () {
         <div class="container-fluid">
 
             <form class="form-horizontal" method="GET" action=".">
+
                 <!-- org -->
-                <div class="form-group form-group">
-                    <label for="OrganisationName" class="col-sm-1 control-label">organisation</label>
-                    <div class="col-sm-5">
-                        <input type="text" 
+                <div class="form-group">
+                    <label for="OrganisationName" class="col-sm-2 control-label">organisation</label>
+                    <div class="col-sm-4">
+                        <input type="text"
                             name="OrganisationName"
-                            class="form-control" 
+                            class="form-control"
                             placeholder="nom de l'organisation (correspondance exacte)"
                             value='{{args.OrganisationName}}' />
                     </div>
                 </div>
 
                 <!-- anytext -->
-                <div class="form-group form-group">
-                    <label for="anytext" class="col-sm-1 control-label">texte</label>
-                    <div class="col-sm-5">
-                        <input type="text" 
+                <div class="form-group">
+                    <label for="anytext" class="col-sm-2 control-label">texte</label>
+                    <div class="col-sm-4">
+                        <input type="text"
                             name="anytext"
-                            class="form-control" 
+                            class="form-control"
                             placeholder="texte libre dans les fiches"
                             value='{{args.anytext}}' />
                     </div>
                 </div>
 
                 <!-- sortby -->
-                <div class="form-group form-group">
-                    <label for="sortby" class="col-sm-1 control-label">tri&eacute; par</label>
-                    <div class="col-sm-3">
+                <div class="form-group">
+                    <label for="sortby" class="col-sm-2 control-label">tri&eacute; par</label>
+                    <div class="col-sm-4">
                         <select name="sortby" class="form-control">
-                            <option value="{{args.sortby}}" selected="selected">{{args.sortby}}</option>
-                            <option value=""></option>
-                            <option value="id">id</option>
-                            <option value="score">score</option>
-                            <option value="OrganisationName">OrganisationName</option>
-                            <option value="date">date</option>
+                            <option value="id" {% if args.sortby == "id" %}selected{% endif %}>id</option>
+                            <option value="score" {% if args.sortby == "score" %}selected{% endif %}>score</option>
+                            <option value="OrganisationName" {% if args.sortby == "OrganisationName" %}selected{% endif %}>OrganisationName</option>
+                            <option value="date" {% if args.sortby == "date" %}selected{% endif %}>date</option>
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- quantity and submit -->
-                <div class="form-group form-group">
-                    <label for="maxharvest" class="col-sm-1 control-label">nombre</label>
-                    <div class="col-sm-3">
+                <div class="form-group">
+                    <label for="maxharvest" class="col-sm-2 control-label">résultats par page</label>
+                    <div class="col-sm-4">
                         <div class="input-group">
                             <select name="maxharvest" class="form-control">
-                                <option value="{{args.maxharvest}}" selected="selected">{{args.maxharvest}}</option>
-                                <option value="5">5</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                                <option value="250">250 (tr&egrave;s lent)</option>
+                                <option value="5" {% if args.maxharvest == 5 %}selected{% endif %}>5</option>
+                                <option value="25" {% if args.maxharvest == 25 %}selected{% endif %}>25</option>
+                                <option value="50" {% if args.maxharvest == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if args.maxharvest == 100 %}selected{% endif %}>100</option>
+                                <option value="250" {% if args.maxharvest == 250 %}selected{% endif %}>250 (tr&egrave;s lent)</option>
                             </select>
-                            <span class="input-group-btn">
-                                <button type="submit" class="btn btn-default btn" type="button">analyser</button>
-                            </span>
                         </div>
                     </div>
                 </div>
 
                 <!-- format -->
-                <div class="form-group form-group">
-                    <label for="maxharvest" class="col-sm-1 control-label">format</label>
-                    <div class="col-sm-3">
+                <div class="form-group">
+                    <label for="format" class="col-sm-2 control-label">format</label>
+                    <div class="col-sm-4">
                         <div class="input-group">
                             <select name="format" class="form-control">
-                                <option value="{{args.format}}" selected="selected">{{args.format}}</option>
-                                <option value="html">html</option>
-                                <option value="json">json</option>
+                                <option value="html" {% if args.format == "html" %}selected{% endif %}>html</option>
+                                <option value="json" {% if args.format == "json" %}selected{% endif %}>json</option>
+                                <option value="csv" {% if args.format == "csv" %}selected{% endif %}>csv</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                
+                <!-- submit -->
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-3>
+                        <div class="input-group">
+                            <button type="submit" class="btn btn-default">Analyser</button>
+                        </div>
+                    </div>
+                </div>
+
             </form>
 
 
             <!-- query params -->
             <p>
-                catalogue : {{cfg.cswurl}}</a> |
+                catalogue : {{cfg.cswurl}} |
                 {% if count.returned>0 %}
                     {% if args.anytext %}anytext : {{args.anytext}} | {% endif %}
                     {%if args.id %}id : {{args.id}} | {% endif %}
@@ -273,10 +276,11 @@ $(function () {
                     {{count.matches}} r&eacute;sultats
                 {% else %}
                     0 r&eacute;sultats, pr&eacute;cisez votre recherche
-                    {% endif %}
+                {% endif %}
             </p>
 
             <!-- pagination -->
+            {% if metas|length > 0 %}
             <ul class="pagination pagination-sm">
                 {%for p in pages %}
                     {% set a = p[0]*args.maxharvest %}
@@ -288,8 +292,10 @@ $(function () {
                 {% endif %}
                 {% endfor %}
             </ul>
+            {% endif %}
 
             <!-- test results -->
+            {% if metas|length > 0 %}
             <div class="row">
             {% for md in metas %}
                 {% if md.score==100 %}
@@ -349,7 +355,8 @@ $(function () {
 
             {% endfor %}
             </div>
-            
+            {% endif %}
+
             <hr class="clear" />
             
             <h3>description des tests unitaires</h3>
