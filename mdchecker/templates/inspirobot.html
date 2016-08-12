@@ -1,411 +1,329 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
-    <head>
-        <title>geOrchestra inspirobot - MdChecker</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        
-        <!-- jquery -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+{% extends "base.html" %}
 
-        <!-- Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+{% block extra_styles %}
+    <style rel="stylesheet" type="text/css">
+        hr.clear {
+            clear: both;
+        }
 
-        <!-- Optional theme -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+        .md-md {
+            font-size: x-small;
+            height: 16em;
+            overflow: auto;
+        }
 
-        <!-- Latest compiled and minified JavaScript -->
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-        <style rel="stylesheet" type="text/css">
+        .md-md.perfect {
+            background-color: #ccffcc;
+        }
+        .md-md.good {
+            background-color: #fff;
+        }
+        .md-md.average {
+            background-color: #ffffcc;
+        }
+        .md-md.bad {
+            background-color: #ffddcc;
+        }
+        .md-md.ugly {
+            background-color: #ffbbcc;
+        }
 
+        .md-md p {
+            padding: 0;
+            margin: 0;
+        }
+        .md-score {
+            padding: 0.2em;
+            margin: 0;
+            float: right;
+            text-align: center;
+        }
 
-hr.clear {
-    clear: both;
-}
+        .md-retest.loading {
+            background-color: #00f !important;
+        }
 
-.md-md {
-    font-size: x-small;
-    height: 16em;
-    overflow: auto;
-}
+        .md-retest.error {
+            background-color: #f00 !important;
+        }
 
-.md-md.perfect {
-    background-color: #ccffcc;
-}
-.md-md.good {
-    background-color: #fff;
-}
-.md-md.average {
-    background-color: #ffffcc;
-}
-.md-md.bad {
-    background-color: #ffddcc;
-}
-.md-md.ugly {
-    background-color: #ffbbcc;
-}
-
-.md-md p {
-    padding: 0;
-    margin: 0;
-}
-.md-score {
-    padding: 0.2em;
-    margin: 0;
-    float: right;
-    text-align: center;
-}
-
-.md-retest.loading {
-    background-color: #00f !important;
-}
-
-.md-retest.error {
-    background-color: #f00 !important;
-}
-
-.md-bt {
-    text-decoration: none;
-}
-.md-contact, .md-contact a {
-    color: #666;
-    text-decoration: none;
-}
-.md-title {
-    padding: 2px;
-}
+        .md-bt {
+            text-decoration: none;
+        }
+        .md-contact, .md-contact a {
+            color: #666;
+            text-decoration: none;
+        }
+        .md-title {
+            padding: 2px;
+        }
 
 
-/* tests */
+        /* tests */
 
-.md-test {
-    line-height: 1.8em;
-}
+        .md-test {
+            line-height: 1.8em;
+        }
 
-.md-test a {
-    padding: 0.1em;
-    margin: 0  0.1em;
-    color: #333;
-    background-color: #ccc;
-    border: 1px solid #666;
-    font-weight: bold;
-    text-decoration: none;
-}
+        .md-test a {
+            padding: 0.1em;
+            margin: 0  0.1em;
+            color: #333;
+            background-color: #ccc;
+            border: 1px solid #666;
+            font-weight: bold;
+            text-decoration: none;
+        }
 
-.md-test a.critical {
-    color: #fff;
-    background-color: #000;
-}
-.md-test a.error {
-    color: #fff;
-    background-color: #f00;
-}
-.md-test a.warning {
-    color: #fff;
-    background-color: #feba00;
-}
-.md-test a.info {
-    color: #fff;
-    background-color: #090;
-}
-.md-test a.debug {
-    color: #666;
-    background-color: #ccc;
-}
+        .md-test a.critical {
+            color: #fff;
+            background-color: #000;
+        }
+        .md-test a.error {
+            color: #fff;
+            background-color: #f00;
+        }
+        .md-test a.warning {
+            color: #fff;
+            background-color: #feba00;
+        }
+        .md-test a.info {
+            color: #fff;
+            background-color: #090;
+        }
+        .md-test a.debug {
+            color: #666;
+            background-color: #ccc;
+        }
 
-.md-test .popover-title,.md-test .popover-content {
-    font-size: small;
-}
-        </style>
-        <script>
-$(function () {
-    /**
-     *  single metadata reload
-     */
-    function handleMdReload(e) {
-        url = $(e.target).attr('href');
-        selector = '#'+url.split('/')[2];
-        $(selector + ' .badge').addClass('loading');
-        $.ajax({
-            url: url,
-            dataType: 'html',
-            success: function(data) {
-                mdnew = $(data).find(selector);
-                if (mdnew) {
-                    $(selector).replaceWith(mdnew);
-                    $(selector + " a.md-retest").click(handleMdReload);
-                }
-                else {
-                    $(selector + ' .badge').removeClass('loading');
-                    $(selector + ' .badge').addClass('error');
-                }
-            },
-            failure: function() {
-                $(selector + ' .badge').removeClass('loading');
-                $(selector + ' .badge').addClass('error');
+        .md-test .popover-title,.md-test .popover-content {
+            font-size: small;
+        }
+    </style>
+{% endblock %}
+
+
+{% block extra_scripts %}
+    <script>
+        $(function () {
+            /**
+             *  single metadata reload
+             */
+            function handleMdReload(e) {
+                url = $(e.target).attr('href');
+                selector = '#'+url.split('/')[2];
+                $(selector + ' .badge').addClass('loading');
+                $.ajax({
+                    url: url,
+                    dataType: 'html',
+                    success: function(data) {
+                        mdnew = $(data).find(selector);
+                        if (mdnew) {
+                            $(selector).replaceWith(mdnew);
+                            $(selector + " a.md-retest").click(handleMdReload);
+                        }
+                        else {
+                            $(selector + ' .badge').removeClass('loading');
+                            $(selector + ' .badge').addClass('error');
+                        }
+                    },
+                    failure: function() {
+                        $(selector + ' .badge').removeClass('loading');
+                        $(selector + ' .badge').addClass('error');
+                    }
+                });
+                return false;
             }
+
+            /**
+             *  ui init
+             */
+
+            $("a.md-retest").click(handleMdReload);
+            $(".md-test a").popover({
+                html: true,
+                content: function() {
+                    return $($(this).children('span')).html();
+                },
+                placement: "bottom",
+                trigger: "hover focus"}
+            );
         });
-        return false;
-    }
-
-    /**
-     *  ui init
-     */
-
-    $("a.md-retest").click(handleMdReload);
-    $(".md-test a").popover({
-        html: true,
-        content: function() {
-            return $($(this).children('span')).html();
-        },
-        placement: "bottom",
-        trigger: "hover focus"}
-    );
-});
     </script>
-    </head>
-    <body>
-        <nav class="navbar navbar-default navbar-static-top">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="#">Inspirobot MdChecker - score {{score}}/100</a>
+{% endblock %}
+
+
+{% block content %}
+    <form class="form-horizontal" method="GET" action=".">
+
+        <!-- org -->
+        <div class="form-group">
+            <label for="OrganisationName" class="col-sm-2 control-label">organisation</label>
+            <div class="col-sm-4">
+                <input type="text"
+                    name="OrganisationName"
+                    class="form-control"
+                    placeholder="nom de l'organisation (correspondance exacte)"
+                    value='{{args.OrganisationName}}' />
+            </div>
+        </div>
+
+        <!-- anytext -->
+        <div class="form-group">
+            <label for="anytext" class="col-sm-2 control-label">texte</label>
+            <div class="col-sm-4">
+                <input type="text"
+                    name="anytext"
+                    class="form-control"
+                    placeholder="texte libre dans les fiches"
+                    value='{{args.anytext}}' />
+            </div>
+        </div>
+
+        <!-- sortby -->
+        <div class="form-group">
+            <label for="sortby" class="col-sm-2 control-label">tri&eacute; par</label>
+            <div class="col-sm-4">
+                <select name="sortby" class="form-control">
+                    <option value="id" {% if args.sortby == "id" %}selected{% endif %}>id</option>
+                    <option value="score" {% if args.sortby == "score" %}selected{% endif %}>score</option>
+                    <option value="OrganisationName" {% if args.sortby == "OrganisationName" %}selected{% endif %}>OrganisationName</option>
+                    <option value="date" {% if args.sortby == "date" %}selected{% endif %}>date</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- quantity and submit -->
+        <div class="form-group">
+            <label for="maxharvest" class="col-sm-2 control-label">résultats par page</label>
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <select name="maxharvest" class="form-control">
+                        <option value="5" {% if args.maxharvest == 5 %}selected{% endif %}>5</option>
+                        <option value="25" {% if args.maxharvest == 25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if args.maxharvest == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if args.maxharvest == 100 %}selected{% endif %}>100</option>
+                        <option value="250" {% if args.maxharvest == 250 %}selected{% endif %}>250 (tr&egrave;s lent)</option>
+                    </select>
                 </div>
             </div>
-          </div>
-        </nav>
-        
-        <div class="container-fluid">
+        </div>
 
-            <form class="form-horizontal" method="GET" action=".">
-
-                <!-- org -->
-                <div class="form-group">
-                    <label for="OrganisationName" class="col-sm-2 control-label">organisation</label>
-                    <div class="col-sm-4">
-                        <input type="text"
-                            name="OrganisationName"
-                            class="form-control"
-                            placeholder="nom de l'organisation (correspondance exacte)"
-                            value='{{args.OrganisationName}}' />
-                    </div>
+        <!-- format -->
+        <div class="form-group">
+            <label for="format" class="col-sm-2 control-label">format</label>
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <select name="format" class="form-control">
+                        <option value="html" {% if args.format == "html" %}selected{% endif %}>html</option>
+                        <option value="json" {% if args.format == "json" %}selected{% endif %}>json</option>
+                        <option value="csv" {% if args.format == "csv" %}selected{% endif %}>csv</option>
+                    </select>
                 </div>
-
-                <!-- anytext -->
-                <div class="form-group">
-                    <label for="anytext" class="col-sm-2 control-label">texte</label>
-                    <div class="col-sm-4">
-                        <input type="text"
-                            name="anytext"
-                            class="form-control"
-                            placeholder="texte libre dans les fiches"
-                            value='{{args.anytext}}' />
-                    </div>
-                </div>
-
-                <!-- sortby -->
-                <div class="form-group">
-                    <label for="sortby" class="col-sm-2 control-label">tri&eacute; par</label>
-                    <div class="col-sm-4">
-                        <select name="sortby" class="form-control">
-                            <option value="id" {% if args.sortby == "id" %}selected{% endif %}>id</option>
-                            <option value="score" {% if args.sortby == "score" %}selected{% endif %}>score</option>
-                            <option value="OrganisationName" {% if args.sortby == "OrganisationName" %}selected{% endif %}>OrganisationName</option>
-                            <option value="date" {% if args.sortby == "date" %}selected{% endif %}>date</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- quantity and submit -->
-                <div class="form-group">
-                    <label for="maxharvest" class="col-sm-2 control-label">résultats par page</label>
-                    <div class="col-sm-4">
-                        <div class="input-group">
-                            <select name="maxharvest" class="form-control">
-                                <option value="5" {% if args.maxharvest == 5 %}selected{% endif %}>5</option>
-                                <option value="25" {% if args.maxharvest == 25 %}selected{% endif %}>25</option>
-                                <option value="50" {% if args.maxharvest == 50 %}selected{% endif %}>50</option>
-                                <option value="100" {% if args.maxharvest == 100 %}selected{% endif %}>100</option>
-                                <option value="250" {% if args.maxharvest == 250 %}selected{% endif %}>250 (tr&egrave;s lent)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- format -->
-                <div class="form-group">
-                    <label for="format" class="col-sm-2 control-label">format</label>
-                    <div class="col-sm-4">
-                        <div class="input-group">
-                            <select name="format" class="form-control">
-                                <option value="html" {% if args.format == "html" %}selected{% endif %}>html</option>
-                                <option value="json" {% if args.format == "json" %}selected{% endif %}>json</option>
-                                <option value="csv" {% if args.format == "csv" %}selected{% endif %}>csv</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- submit -->
-                <div class="form-group">
-                    <div class="col-sm-offset-2 col-sm-3>
-                        <div class="input-group">
-                            <button type="submit" class="btn btn-default">Analyser</button>
-                        </div>
-                    </div>
-                </div>
-
-            </form>
-
-
-            <!-- query params -->
-            <p>
-                catalogue : {{cfg.cswurl}} |
-                {% if count.returned>0 %}
-                    {% if args.anytext %}anytext : {{args.anytext}} | {% endif %}
-                    {%if args.id %}id : {{args.id}} | {% endif %}
-                    {% if args.OrganisationName %}OrganisationName : {{args.OrganisationName}} | {% endif %}
-                    {{count.matches}} r&eacute;sultats
-                {% else %}
-                    0 r&eacute;sultats, pr&eacute;cisez votre recherche
-                {% endif %}
-            </p>
-
-            <!-- pagination -->
-            {% if metas|length > 0 %}
-            <ul class="pagination pagination-sm">
-                {%for p in pages %}
-                    {% set a = p[0]*args.maxharvest %}
-                    {% set b = (p[0]+1)*args.maxharvest-1 %}
-                {% if a==args.nextrecord %}
-                <li class="active"><a href="{{p[1]}}">{{a}}-{{b}}</a></li>
-                {% else %}
-                <li><a href="{{p[1]}}">{{a}}-{{b}}</a></li>
-                {% endif %}
-                {% endfor %}
-            </ul>
-            {% endif %}
-
-            <!-- test results -->
-            {% if metas|length > 0 %}
-            <div class="row">
-            {% for md in metas %}
-                {% if md.score==100 %}
-                    {% set rank = "perfect" %}
-                {% elif md.score>=80 %}
-                    {% set rank = "good" %}
-                {% elif md.score>=40 %}
-                    {% set rank = "average" %}
-                {% elif md.score>=40 %}
-                    {% set rank = "bad" %}
-                {% elif md.score>=40 %}
-                    {% set rank = "ugly" %}
-                {% endif %}
-                <div class="col-md-4 col-lg-3" id="{{md.fileIdentifier}}">
-
-                    <div class="panel panel-default md-md {{rank}}">
-                        <div class="panel-heading">
-                            <div class="md-score">
-                                <a href="/md/{{md.fileIdentifier}}/html" class="md-retest badge">{{md.score}}</a>
-                            </div>
-                            <a class="md-bt" href="{{cfg.viewurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view html">{{md.fileIdentifier}}</a>
-                            <a class="md-bt" href="{{cfg.xmlurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view xml">xml</a>
-                            <br />
-                            {{md.MD_Identifier}}
-                            <span class="md-date">({{md.date}})</span>
-                        </div>
-                        <div class="panel-body">
-                            <!-- contact -->
-                            <p class="md-contact">
-                                {{md.OrganisationName}}
-                                {% for mail in md.contact.mails %}
-                                <a href="mailto:{{mail}}">{{mail}}</a>
-                                {% endfor %}
-                            </p>
-                            
-                            <!-- resource description -->
-                            <p class="md-title" title="{{md.abstract}}">{{md.title}}</p>
-                            <!-- tests -->
-                            <p class="md-test">
-                                {% for t in md.reports:%}
-                                <a href="{{t.getUrl()}}" class="{{t.getLevel()}}" role="button" data-toggle="popover"  title="{{t.abstract}}">
-                                    {{t.name}}
-                                    {% if t.getResults() %}
-                                    <span style="display: none">
-                                        {% for r in t.getResults() %}
-                                        {{r[0]}} : {{r[1]}}
-                                        <br />
-                                        {% endfor %}
-                                    </span>
-                                    {% endif %}
-                                </a>
-                                {% endfor %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-            {% endfor %}
             </div>
-            {% endif %}
+        </div>
 
-            <hr class="clear" />
-            
-            <h3>description des tests unitaires</h3>
-            {% for ut in tests %}
-            <div class="panel panel-default">
-                <div class="panel-heading">{{ut.name}}</div>
+        <!-- submit -->
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-3>
+                <div class="input-group">
+                    <button type="submit" class="btn btn-default">Analyser</button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+
+    <!-- query params -->
+    <p>
+        catalogue : {{cfg.cswurl}} |
+        {% if count.returned>0 %}
+            {% if args.anytext %}anytext : {{args.anytext}} | {% endif %}
+            {%if args.id %}id : {{args.id}} | {% endif %}
+            {% if args.OrganisationName %}OrganisationName : {{args.OrganisationName}} | {% endif %}
+            {{count.matches}} r&eacute;sultats
+        {% else %}
+            0 r&eacute;sultats, pr&eacute;cisez votre recherche
+        {% endif %}
+    </p>
+
+    <!-- pagination -->
+    {% if metas|length > 0 %}
+    <ul class="pagination pagination-sm">
+        {%for p in pages %}
+            {% set a = p[0]*args.maxharvest %}
+            {% set b = (p[0]+1)*args.maxharvest-1 %}
+        {% if a==args.nextrecord %}
+        <li class="active"><a href="{{p[1]}}">{{a}}-{{b}}</a></li>
+        {% else %}
+        <li><a href="{{p[1]}}">{{a}}-{{b}}</a></li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- test results -->
+    {% if metas|length > 0 %}
+    <div class="row">
+    {% for md in metas %}
+        {% if md.score==100 %}
+            {% set rank = "perfect" %}
+        {% elif md.score>=80 %}
+            {% set rank = "good" %}
+        {% elif md.score>=40 %}
+            {% set rank = "average" %}
+        {% elif md.score>=40 %}
+            {% set rank = "bad" %}
+        {% elif md.score>=40 %}
+            {% set rank = "ugly" %}
+        {% endif %}
+        <div class="col-md-4 col-lg-3" id="{{md.fileIdentifier}}">
+
+            <div class="panel panel-default md-md {{rank}}">
+                <div class="panel-heading">
+                    <div class="md-score">
+                        <a href="/md/{{md.fileIdentifier}}/html" class="md-retest badge">{{md.score}}</a>
+                    </div>
+                    <a class="md-bt" href="{{cfg.viewurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view html">{{md.fileIdentifier}}</a>
+                    <a class="md-bt" href="{{cfg.xmlurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view xml">xml</a>
+                    <br />
+                    {{md.MD_Identifier}}
+                    <span class="md-date">({{md.date}})</span>
+                </div>
                 <div class="panel-body">
-                    <p>{{ut.abstract}}</p>
-                    <table class="table">
-                        <tr>
-                            <td>chemins</td>
-                            <td>
-                                <ul>
-                                {% for key, value in ut.xpath.items() %}
-                                    <li>{{key}} : {{value}}</li>
-                                {% endfor %}
-                                </ul>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>expressions</td>
-                            <td>
-                                <ul>
-                                {% for key, value in ut.re.items() %}
-                                    <li>{{key}} : {{value}}</li>
-                                {% endfor %}
-                                </ul>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>valeurs</td>
-                            <td>
-                                <ul>
-                                {% for key, valuelist in ut.values.items() %}
-                                    <li>
-                                        {{key}} :
-                                            {% for value in valuelist %}
-                                            {{value}},
-                                            {% endfor %}
-                                    </li>
-                                {% endfor %}
-                                </ul>
-                            </td>
-                        </tr>
-                    </table>
+                    <!-- contact -->
+                    <p class="md-contact">
+                        {{md.OrganisationName}}
+                        {% for mail in md.contact.mails %}
+                        <a href="mailto:{{mail}}">{{mail}}</a>
+                        {% endfor %}
+                    </p>
 
+                    <!-- resource description -->
+                    <p class="md-title" title="{{md.abstract}}">{{md.title}}</p>
+                    <!-- tests -->
+                    <p class="md-test">
+                        {% for t in md.reports:%}
+                        <a href="{{t.getUrl()}}" class="{{t.getLevel()}}" role="button" data-toggle="popover"  title="{{t.abstract}}">
+                            {{t.name}}
+                            {% if t.getResults() %}
+                            <span style="display: none">
+                                {% for r in t.getResults() %}
+                                {{r[0]}} : {{r[1]}}
+                                <br />
+                                {% endfor %}
+                            </span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </p>
                 </div>
             </div>
-            {% endfor %}
-        </body>
+        </div>
+
+    {% endfor %}
     </div>
-</html>
+    {% endif %}
+
+{% endblock %}

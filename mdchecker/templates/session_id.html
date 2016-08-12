@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">Session {{ session.id }}</div>
+        <table class="table table-condensed">
+            <tbody>
+                <tr><td>Identifiant de la session de test</td><td>{{ session.id }}</td></tr>
+                <tr><td>Catalogue analysé</td><td>{{ session.cat_url }}</td></tr>
+                <tr><td>Date/heure de la session</td><td>{{ session.date }}</td></tr>
+                <tr><td>Filtre appliqué sur le catalogue</td><td>{{ session.filter }}</td></tr>
+                <tr><td>Nombre de métadonnées total</td><td>{{ session.md_reports.all()|length }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br>
+    formulaire de recherche<br>
+        liste des organisations
+
+
+
+    chaine de caractères dans titre
+    chaine de caractères dans résumé
+    erreur/criticité
+    tri par titre, organisation, score
+    nombre d'enregistrements par page
+
+    <br>
+    résultats<br>
+
+
+    <div class="panel panel-default">
+        <div class="panel-heading">Résultats des tests</div>
+        <div class="panel-body">
+            {% set reports = session.md_reports.all() %}
+            {% if reports|length > 0 %}
+            <table class="table table-hover table-condensed">
+                <thead>
+                    <tr>
+                        <th>Métadonnées</th>
+                        <th>Titre</th>
+                        <th>Score</th>
+                        <th>Niveau</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                        {% set md = report.md %}
+                        {% set errors = report.unit_test_results.with_entities("test_result_level").distinct().all() %}
+                        {% set error_level = "" %}
+                        {% set error_list = [] %}
+                        {% for error in errors %}
+                            {% do error_list.append(error[0]) %}
+                        {% endfor %}
+                        {% if "error" in error_list %}
+                            {% set error_level = "Erreur" %}
+                        {% elif "warning" in error_list %}
+                            {% set error_level = "Avertissement" %}
+                        {% elif "info" in error_list %}
+                            {% set error_level = "Information" %}
+                        {% endif %}
+                    <tr>
+                        <td>{{ md.file_id }}</td>
+                        <td>{{ md.res_title }}</td>
+                        <td>{{ report.score }}</td>
+                        <td>{{ error_level }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Aucune session de test n'est présente en base de données</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
