@@ -356,10 +356,8 @@ def index():
 @app.route("/session/")
 def session_list():
 
-    sessions = TestSession.query.all()
-
-    return render_template(
-        'session_list.html', cfg=cfg, sessions=sessions)
+    sessions = TestSession.query
+    return object_list('session_list.html', sessions, cfg=cfg)
 
 
 @app.route("/session/<id>/")
@@ -381,3 +379,14 @@ def test_description():
 
     return render_template(
         'test_description.html', cfg=cfg, tests=mdUnitTests)
+
+
+def object_list(template_name, query, paginate_by=10, **context):
+    page = request.args.get('page')
+    if page and page.isdigit():
+        page = int(page)
+    else:
+        page = 1
+
+    object_list = query.paginate(page, paginate_by)
+    return render_template(template_name, object_list=object_list, **context)

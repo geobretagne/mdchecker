@@ -15,6 +15,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">Dernières sessions</div>
         <div class="panel-body">
+            {% set sessions = object_list.items %}
             {% if sessions|length > 0 %}
             <table class="table table-hover table-condensed">
                 <thead>
@@ -28,7 +29,7 @@
                 <tbody>
                     {% for session in sessions %}
                     <tr>
-                        <td><a href="/session/{{ session.id }}" class='clickable-row'>{{ session.id }}</a></td>
+                        <td><a href="{{ url_for('session_by_id', id=session.id) }}" class='clickable-row'>{{ session.id }}</a></td>
                         <td>{{ session.cat_url }}</td>
                         <td>{{ session.filter|default('', true) }}</td>
                         <td>{{ session.date }}</td>
@@ -36,6 +37,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+
+            {% include "include_page_links.html" %}
+
             {% else %}
             <p>Aucune session de test n'est présente en base de données</p>
             {% endif %}
