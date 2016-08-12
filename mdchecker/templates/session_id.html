@@ -3,15 +3,17 @@
 {% block content %}
     <div class="panel panel-default">
         <div class="panel-heading">Session {{ session.id }}</div>
-        <table class="table table-condensed">
-            <tbody>
-                <tr><td>Identifiant de la session de test</td><td>{{ session.id }}</td></tr>
-                <tr><td>Catalogue analysé</td><td>{{ session.cat_url }}</td></tr>
-                <tr><td>Date/heure de la session</td><td>{{ session.date }}</td></tr>
-                <tr><td>Filtre appliqué sur le catalogue</td><td>{{ session.filter }}</td></tr>
-                <tr><td>Nombre de métadonnées total</td><td>{{ session.md_reports.all()|length }}</td></tr>
-            </tbody>
-        </table>
+        <div class="panel-body">
+            <table class="table table-condensed">
+                <tbody>
+                    <tr><td>Identifiant de la session de test</td><td>{{ session.id }}</td></tr>
+                    <tr><td>Catalogue analysé</td><td>{{ session.cat_url }}</td></tr>
+                    <tr><td>Date/heure de la session</td><td>{{ session.date }}</td></tr>
+                    <tr><td>Filtre appliqué sur le catalogue</td><td>{{ session.filter }}</td></tr>
+                    <tr><td>Nombre de métadonnées total</td><td>{{ session.md_reports.all()|length }}</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <br>
@@ -33,7 +35,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">Résultats des tests</div>
         <div class="panel-body">
-            {% set reports = session.md_reports.all() %}
+            {% set reports = object_list.items %}
             {% if reports|length > 0 %}
             <table class="table table-hover table-condensed">
                 <thead>
@@ -69,8 +71,11 @@
                     {% endfor %}
                 </tbody>
             </table>
+
+            {% include "include_page_links.html" %}
+
             {% else %}
-            <p>Aucune session de test n'est présente en base de données</p>
+            <p>Aucune résult de test n'est présent en base de données pour cette session</p>
             {% endif %}
         </div>
     </div>
