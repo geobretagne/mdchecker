@@ -30,7 +30,7 @@
                     <tr>
                         <td><a href="/session/{{ session.id }}" class='clickable-row'>{{ session.id }}</a></td>
                         <td>{{ session.cat_url }}</td>
-                        <td>{{ session.filter }}</td>
+                        <td>{{ session.filter|default('', true) }}</td>
                         <td>{{ session.date }}</td>
                     </tr>
                     {% endfor %}
