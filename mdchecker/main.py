@@ -366,19 +366,15 @@ def session_by_id(id=None):
     session = TestSession.query.filter_by(
                 id=id
             ).first()
-    print(id)
-    print(session)
 
-    return render_template(
-        'session_id.html', cfg=cfg, session=session)
+    return object_list('session_id.html', session.md_reports, cfg=cfg, session=session)
 
 
 @app.route("/tests/")
 def test_description():
     mdUnitTests = getMdUnitTests()
 
-    return render_template(
-        'test_description.html', cfg=cfg, tests=mdUnitTests)
+    return render_template('test_description.html', cfg=cfg, tests=mdUnitTests)
 
 
 def object_list(template_name, query, paginate_by=10, **context):
