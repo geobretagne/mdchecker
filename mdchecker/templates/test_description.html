@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block extra_styles %}
+<style rel="stylesheet" type="text/css">
+    .clickable-row {
+        content: "";
+        display: inline-block;
+        position: absolute;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+    <h3>description des tests unitaires</h3>
+
+    {% for ut in tests %}
+    <div class="panel panel-default">
+        <div class="panel-heading">{{ut.name}}</div>
+        <div class="panel-body">
+            <p>{{ut.abstract}}</p>
+            <table class="table">
+                <tr>
+                    <td>chemins</td>
+                    <td>
+                        <ul>
+                        {% for key, value in ut.xpath.items() %}
+                            <li>{{key}} : {{value}}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>expressions</td>
+                    <td>
+                        <ul>
+                        {% for key, value in ut.re.items() %}
+                            <li>{{key}} : {{value}}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>valeurs</td>
+                    <td>
+                        <ul>
+                        {% for key, valuelist in ut.values.items() %}
+                            <li>
+                                {{key}} :
+                                    {% for value in valuelist %}
+                                    {{value}},
+                                    {% endfor %}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+    {% endfor %}
+
+{% endblock %}

@@ -350,12 +350,34 @@ def index():
 
         return render_template(
             'inspirobot.html', cfg=cfg, args=args, score=score,
-            metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
+            metas=metadatas, count=count, pages=pageUrls)
 
-@app.route("/session")
+
+@app.route("/session/")
 def session_list():
 
     sessions = TestSession.query.all()
 
     return render_template(
         'session_list.html', cfg=cfg, sessions=sessions)
+
+
+@app.route("/session/<id>/")
+def session_by_id(id=None):
+
+    session = TestSession.query.filter_by(
+                id=id
+            ).first()
+    print(id)
+    print(session)
+
+    return render_template(
+        'session_id.html', cfg=cfg, session=session)
+
+
+@app.route("/tests/")
+def test_description():
+    mdUnitTests = getMdUnitTests()
+
+    return render_template(
+        'test_description.html', cfg=cfg, tests=mdUnitTests)

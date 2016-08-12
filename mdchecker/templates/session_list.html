@@ -1,75 +1,44 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
-    <head>
-        <title>geOrchestra inspirobot - MdChecker</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        
-        <!-- jquery -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+{% extends "base.html" %}
 
-        <!-- Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+{% block extra_styles %}
+<style rel="stylesheet" type="text/css">
+    .clickable-row {
+        content: "";
+        display: inline-block;
+        position: absolute;
+        width: 100%;
+    }
+</style>
+{% endblock %}
 
-        <!-- Optional theme -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-
-        <!-- Latest compiled and minified JavaScript -->
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-
-
-    </head>
-    <body>
-        <nav class="navbar navbar-default navbar-static-top">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="#">Inspirobot MdChecker - score {{score}}/100</a>
-                </div>
-            </div>
-          </div>
-        </nav>
-        
-        <div class="container-fluid">
-
-            <div class="panel panel-default">
-                <div class="panel-heading">Dernières sessions</div>
-                <div class="panel-body">
-                    {% if sessions|length > 0 %}
-                    <table class="table table-hover table-condensed">
-                        <thead>
-                            <tr>
-                                <th>Id</th>
-                                <th>Catalogue</th>
-                                <th>Filtre</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for session in sessions %}
-                            <tr>
-                                <td>{{ session.id }}</td>
-                                <td>{{ session.cat_url }}</td>
-                                <td>{{ session.filter }}</td>
-                                <td>{{ session.date }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p>Aucune session de test n'est présente en base de données</p>
-                    {% endif %}
-                </div>
-            </div>
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">Dernières sessions</div>
+        <div class="panel-body">
+            {% if sessions|length > 0 %}
+            <table class="table table-hover table-condensed">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Catalogue</th>
+                        <th>Filtre</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td><a href="/session/{{ session.id }}" class='clickable-row'>{{ session.id }}</a></td>
+                        <td>{{ session.cat_url }}</td>
+                        <td>{{ session.filter }}</td>
+                        <td>{{ session.date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Aucune session de test n'est présente en base de données</p>
+            {% endif %}
         </div>
-
-    </body>
-</html>
+    </div>
+{% endblock %}
