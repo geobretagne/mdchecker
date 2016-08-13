@@ -8,6 +8,7 @@ from lxml import etree
 import os
 import logging
 import datetime
+import dateutil.parser
 import hashlib
 import json
 import shapefile
@@ -34,7 +35,20 @@ def xmlGetTextNodes(doc, xpath, namespaces):
         'gmd':  u'http://www.isotc211.org/2005/gmd',
         'gco': u'http://www.isotc211.org/2005/gco'
     }))
-    
+
+
+def parse_string_for_max_date(dates_as_str):
+
+    dates_python = []
+    for date_str in dates_as_str.split(","):
+        date_str = date_str.strip()
+        if date_str != "":
+            date_python = dateutil.parser.parse(date_str, ignoretz=True)
+            dates_python.append(date_python)
+    if len(dates_python) > 0:
+        return max(dates_python)
+
+
 ################################################
 
 
@@ -345,12 +359,19 @@ class MD:
             '/gmd:MD_Metadata/gmd:identificationInfo/'
             'gmd:MD_DataIdentification/gmd:abstract/gco:CharacterString/text()',
             self.namespaces)
-        self.date = xmlGetTextNodes(
+        dates_str = xmlGetTextNodes(
             self.md,
             '/gmd:MD_Metadata/gmd:identificationInfo/'
             'gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/'
             'gmd:date/gmd:CI_Date/gmd:date/gco:DateTime/text()',
-            self.namespaces).split('-')[0]
+            self.namespaces)
+        self.date = parse_string_for_max_date(dates_str)
+        md_dates_str = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:dateStamp/'
+            'gco:DateTime/text()',
+            self.namespaces)
+        self.md_date = parse_string_for_max_date(md_dates_str)
         self.contact = {
             'mails': self.md.xpath(
                 '/gmd:MD_Metadata/gmd:contact/gmd:CI_ResponsibleParty/gmd:contactInfo/'
@@ -411,6 +432,7 @@ class MD:
         return {
             'fileIdentifier': self.fileIdentifier,
             'MD_Identifier': self.MD_Identifier,
+            'md_date': self.md_date,
             'title': self.title,
             'OrganisationName': self.OrganisationName,
             'abstract': self.abstract,

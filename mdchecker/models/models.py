@@ -7,6 +7,8 @@ class ResourceMd(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cat_url = db.Column(db.String(512))
     file_id = db.Column(db.String(128))
+    md_date = db.Column(db.DateTime)
+    res_date = db.Column(db.DateTime)
     res_uri = db.Column(db.String(128))
     res_title = db.Column(db.String(128))
     res_abstract = db.Column(db.String(1024))

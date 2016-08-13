@@ -189,7 +189,6 @@ def runTests(args, mdUnitTests):
         )
 
         # Test session db record
-        test_datetime = datetime.datetime.utcnow()
         ts = TestSession(
             cat_url=cfg['cswurl'],
             filter=constraintstr,
@@ -218,6 +217,8 @@ def runTests(args, mdUnitTests):
                 md = ResourceMd(
                     cat_url=cfg['cswurl'],
                     file_id=meta.fileIdentifier,
+                    md_date=meta.md_date,
+                    res_date=meta.date,
                     res_uri=meta.MD_Identifier,
                     res_title=meta.title,
                     res_abstract=meta.abstract,
@@ -226,6 +227,8 @@ def runTests(args, mdUnitTests):
                 db.session.add(md)
             else:
                 md.file_id = meta.fileIdentifier
+                md.md_date = meta.md_date
+                md.res_date = meta.date
                 md.res_uri = meta.MD_Identifier
                 md.res_title = meta.title
                 md.res_abstract = meta.abstract
@@ -325,7 +328,6 @@ def index():
     score = 0
 
     # querystring parser
-    request_args = getArgsFromQuery(request)
     args.update(getArgsFromQuery(request))
 
     if doWeNeedToProcessRequest(request):
@@ -367,7 +369,53 @@ def session_by_id(id=None):
                 id=id
             ).first()
 
-    return object_list('session_id.html', session.md_reports, cfg=cfg, session=session)
+    sort_by = "score"
+    asc = True
+
+    request_sort_by = request.args.get('sort')
+    request_asc = request.args.get('asc')
+    request_desc = request.args.get('desc')
+    if request_sort_by:
+        request_sort_by = request_sort_by.lower().strip()
+        if request_sort_by in ("id", "title", "score", "organisation", "date"):
+            sort_by = request_sort_by
+
+    if request_asc:
+        asc = True
+    elif request_desc:
+        asc = False
+
+    if sort_by == "id":
+        if asc:
+            query = session.md_reports.join(ResourceMd).order_by("file_id")
+        else:
+            query = session.md_reports.join(ResourceMd).order_by("file_id desc")
+
+    elif sort_by == "score":
+        if asc:
+            query = session.md_reports.order_by(MdReport.score)
+        else:
+            query = session.md_reports.order_by(MdReport.score.desc())
+
+    elif sort_by == "title":
+        if asc:
+            query = session.md_reports.join(ResourceMd).order_by("res_title")
+        else:
+            query = session.md_reports.join(ResourceMd).order_by("res_title desc")
+
+    elif sort_by == "organisation":
+        if asc:
+            query = session.md_reports.join(ResourceMd).order_by("res_organisation_name")
+        else:
+            query = session.md_reports.join(ResourceMd).order_by("res_organisation_name desc")
+
+    elif sort_by == "date":
+        if asc:
+            query = session.md_reports.join(ResourceMd).order_by("md_date")
+        else:
+            query = session.md_reports.join(ResourceMd).order_by("md_date desc")
+
+    return object_list('session_id.html', query, cfg=cfg, session=session, sort_by=sort_by, asc=asc)
 
 
 @app.route("/tests/")
