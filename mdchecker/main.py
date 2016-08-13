@@ -190,16 +190,16 @@ def runTests(args, mdUnitTests):
 
 ### routes ######################################
 @app.route('/md/')
-@app.route('/md/<id>')
-@app.route('/md/<id>/<format>')
-def byId(rec_id='', format='html'):
+@app.route('/md/<md_id>')
+@app.route('/md/<md_id>/<format>')
+def byId(md_id='', format='html'):
     args = {
         'OrganisationName': '',
         'anytext':          '',
         'maxharvest':       cfg['maxharvest'],
         'sortby':           cfg['sortby'],
         'nextrecord':       0,
-        'id':               rec_id,
+        'id':               md_id,
         'roles':            [],
         'format':           format
     }
