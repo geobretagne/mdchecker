@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block extra_styles %}
+<style rel="stylesheet" type="text/css">
+    .nowrap {
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <div class="panel panel-default">
         <div class="panel-heading">Session {{ session.id }}</div>
@@ -16,21 +24,32 @@
         </div>
     </div>
 
-    <br>
-    formulaire de recherche<br>
-        liste des organisations
+    <form class="form-horizontal" method="GET" action=".">
 
+        <!-- sortby -->
+        <div class="form-group">
+            <label for="sortby" class="col-sm-2 control-label">Tri&eacute; par</label>
+            <div class="col-sm-4">
+                <select name="sortby" class="form-control">
+                    <option value="score" {% if sort_by == "score" %}selected{% endif %}>Score</option>
+                    <option value="organisation" {% if sort_by == "organisation" %}selected{% endif %}>Nom de l'organisme</option>
+                    <option value="id" {% if sort_by == "id" %}selected{% endif %}>File identifier des métadonnées</option>
+                    <option value="title" {% if sort_by == "title" %}selected{% endif %}>Titre des métadonnées</option>
+                    <option value="date" {% if sort_by == "date" %}selected{% endif %}>Date des métadonnées</option>
+                </select>
+            </div>
+        </div>
 
+        <!-- submit -->
+        <!--div class="form-group">
+            <div class="col-sm-offset-2 col-sm-3>
+                <div class="input-group">
+                    <button type="submit" class="btn btn-default">Analyser</button>
+                </div>
+            </div>
+        </div-->
 
-    chaine de caractères dans titre
-    chaine de caractères dans résumé
-    erreur/criticité
-    tri par titre, organisation, score
-    nombre d'enregistrements par page
-
-    <br>
-    résultats<br>
-
+    </form>
 
     <div class="panel panel-default">
         <div class="panel-heading">Résultats des tests</div>
@@ -41,6 +60,8 @@
                 <thead>
                     <tr>
                         <th>Métadonnées</th>
+                        <th>Date md</th>
+                        <th>Organisme</th>
                         <th>Titre</th>
                         <th>Score</th>
                         <th>Niveau</th>
@@ -64,6 +85,8 @@
                         {% endif %}
                     <tr>
                         <td>{{ md.file_id }}</td>
+                        <td class="nowrap">{% if md.md_date %}{{ md.md_date.strftime('%Y-%m-%d') }}{% endif %}</td>
+                        <td>{{ md.res_organisation_name }}</td>
                         <td>{{ md.res_title }}</td>
                         <td>{{ report.score }}</td>
                         <td>{{ error_level }}</td>
