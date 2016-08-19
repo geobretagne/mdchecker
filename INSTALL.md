@@ -27,7 +27,7 @@ pip install -r mdchecker/requirements.txt
 If you must get through a http proxy, use this instead
 
 ```
-git config --global http_proxy=http://addr:port/ 
+git config --global http.proxy http://addr:port/ 
 git clone https://github.com/geobretagne/mdchecker.git mdchecker
 pip install --proxy=http://addr:port/ -r mdchecker/requirements.txt
 ```
