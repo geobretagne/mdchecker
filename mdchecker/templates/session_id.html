@@ -18,7 +18,11 @@
                     <tr><td>Catalogue analysé</td><td>{{ session.cat_url }}</td></tr>
                     <tr><td>Date/heure de la session</td><td>{{ session.date }}</td></tr>
                     <tr><td>Filtre appliqué sur le catalogue</td><td>{{ session.filter }}</td></tr>
-                    <tr><td>Nombre de métadonnées total</td><td>{{ session.md_reports.all()|length }}</td></tr>
+                    <tr><td>Nombre total de métadonnées testées</td><td>{{ session.get_nb_md_tested() }}</td></tr>
+                    <tr><td>Nombre de types tests exécutés</td><td>{{ session.get_nb_test_types() }}</td></tr>
+                    <tr><td>Score moyen par métadonnées</td><td>{{ session.get_average_md_score() }}</td></tr>
+                    <tr><td>Pourcentage de métadonnées avec un score > 80</td><td>{{ session.get_percentage_md_upper_than_80() }} %</td></tr>
+                    <tr><td>Pourcentage de métadonnées avec un score < 20</td><td>{{ session.get_percentage_md_lower_than_20() }} %</td></tr>
                 </tbody>
             </table>
         </div>
@@ -28,7 +32,7 @@
 
         <!-- sortby -->
         <div class="form-group">
-            <label for="sortby" class="col-sm-2 control-label">Tri&eacute; par</label>
+            <label for="sortby" class="col-sm-2 control-label">Trier par</label>
             <div class="col-sm-4">
                 <select name="sortby" class="form-control">
                     <option value="score" {% if sort_by == "score" %}selected{% endif %}>Score</option>

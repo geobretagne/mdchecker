@@ -1,6 +1,6 @@
 #db tests
 from mdchecker.main import db
-
+from sqlalchemy import func
 
 class ResourceMd(db.Model):
     __tablename__ = 'resource_md'
@@ -34,6 +34,24 @@ class TestSession(db.Model):
     def __repr__(self):
         return "<TestSession: {0}>".format(self.id)
 
+    def get_nb_md_tested(self):
+        return self.md_reports.count()
+
+    def get_nb_test_types(self):
+        return self.md_reports.join(UnitTestResult).with_entities("test_id").distinct().count()
+
+    def get_average_md_score(self):
+        return self.md_reports.with_entities(func.avg(MdReport.score).label('average_score')).first()[0]
+
+    def get_percentage_md_upper_than_80(self):
+        total_md = self.get_nb_md_tested()
+        nb_md = self.md_reports.filter(MdReport.score > 80).count()
+        return nb_md*100/total_md
+
+    def get_percentage_md_lower_than_20(self):
+        total_md = self.get_nb_md_tested()
+        nb_md = self.md_reports.filter(MdReport.score < 20).count()
+        return nb_md*100/total_md
 
 class MdReport(db.Model):
     __tablename__ = 'md_report'
