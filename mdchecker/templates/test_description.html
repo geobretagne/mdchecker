@@ -27,12 +27,11 @@
     <h2>Description des tests unitaires</h2>
 
     {% for ut in tests %}
-    <div class="panel panel-default">
+    <div class="panel panel-default small">
         <div class="panel-heading"
              data-toggle="collapse" data-target="#collapse-{{ut.name}}"
              aria-expanded="false" aria-controls="collapse-{{ut.name}}">
-            <h4>{{ut.name}}</h4>
-            <p>{{ut.abstract}}</p>
+            <h4>{{ut.name}}&nbsp: <small>{{ut.abstract}}</small></h4>
         </div>
         <div class="panel-collapse collapse" id="collapse-{{ut.name}}">
 
