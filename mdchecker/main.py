@@ -370,52 +370,50 @@ def session_by_id(id=None):
             ).first()
 
     sort_by = "score"
-    asc = True
 
-    request_sort_by = request.args.get('sort')
-    request_asc = request.args.get('asc')
-    request_desc = request.args.get('desc')
+    request_sort_by = request.args.get('sort_by')
     if request_sort_by:
         request_sort_by = request_sort_by.lower().strip()
         if request_sort_by in ("id", "title", "score", "organisation", "date"):
             sort_by = request_sort_by
 
-    if request_asc:
-        asc = True
-    elif request_desc:
-        asc = False
+    request_order = request.args.get('order')
+    if request_order and request_order.lower().strip() == "desc":
+        order = "desc"
+    else:
+        order = "asc"
 
     if sort_by == "id":
-        if asc:
+        if order == "asc":
             query = session.md_reports.join(ResourceMd).order_by("file_id")
         else:
             query = session.md_reports.join(ResourceMd).order_by("file_id desc")
 
     elif sort_by == "score":
-        if asc:
+        if order == "asc":
             query = session.md_reports.order_by(MdReport.score)
         else:
             query = session.md_reports.order_by(MdReport.score.desc())
 
     elif sort_by == "title":
-        if asc:
+        if order == "asc":
             query = session.md_reports.join(ResourceMd).order_by("res_title")
         else:
             query = session.md_reports.join(ResourceMd).order_by("res_title desc")
 
     elif sort_by == "organisation":
-        if asc:
+        if order == "asc":
             query = session.md_reports.join(ResourceMd).order_by("res_organisation_name")
         else:
             query = session.md_reports.join(ResourceMd).order_by("res_organisation_name desc")
 
     elif sort_by == "date":
-        if asc:
+        if order == "asc":
             query = session.md_reports.join(ResourceMd).order_by("md_date")
         else:
             query = session.md_reports.join(ResourceMd).order_by("md_date desc")
 
-    return object_list('session_id.html', query, cfg=cfg, session=session, sort_by=sort_by, asc=asc)
+    return object_list('session_id.html', query, cfg=cfg, session=session, sort_by=sort_by, order=order)
 
 
 @app.route("/tests/")

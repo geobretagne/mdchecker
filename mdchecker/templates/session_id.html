@@ -32,9 +32,9 @@
 
         <!-- sortby -->
         <div class="form-group">
-            <label for="sortby" class="col-sm-2 control-label">Trier par</label>
+            <label for="sort_by" class="col-sm-2 control-label">Trier par</label>
             <div class="col-sm-4">
-                <select name="sortby" class="form-control">
+                <select name="sort_by" class="form-control" onchange="this.form.submit()">
                     <option value="score" {% if sort_by == "score" %}selected{% endif %}>Score</option>
                     <option value="organisation" {% if sort_by == "organisation" %}selected{% endif %}>Nom de l'organisme</option>
                     <option value="id" {% if sort_by == "id" %}selected{% endif %}>File identifier des métadonnées</option>
@@ -44,14 +44,15 @@
             </div>
         </div>
 
-        <!-- submit -->
-        <!--div class="form-group">
-            <div class="col-sm-offset-2 col-sm-3>
-                <div class="input-group">
-                    <button type="submit" class="btn btn-default">Analyser</button>
-                </div>
+        <div class="form-group">
+            <label for="order" class="col-sm-2 control-label">Ordre</label>
+            <div class="col-sm-4">
+                <select name="order" class="form-control" onchange="this.form.submit()">
+                    <option value="asc" {% if order == "asc" %}selected{% endif %}>Croissant</option>
+                    <option value="desc" {% if order == "desc" %}selected{% endif %}>Décroissant</option>
+                </select>
             </div>
-        </div-->
+        </div>
 
     </form>
 
