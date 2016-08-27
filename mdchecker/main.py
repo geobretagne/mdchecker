@@ -312,6 +312,11 @@ def byId(md_id='', format='html'):
 
 @app.route("/")
 def index():
+    return render_template('index.html', cfg=cfg)
+
+
+@app.route("/quick_test/")
+def quick_test():
     args = {
         'OrganisationName': '',
         'anytext':          '',
@@ -355,7 +360,13 @@ def index():
             metas=metadatas, count=count, pages=pageUrls)
 
 
-@app.route("/session/")
+@app.route("/new_session/")
+def new_session():
+    return render_template('new_session.html', cfg=cfg)
+    return u"Under heavy construction... will come soon"
+
+
+@app.route("/sessions/")
 def session_list():
 
     sessions = TestSession.query
@@ -416,7 +427,7 @@ def session_by_id(id=None):
     return object_list('session_id.html', query, cfg=cfg, session=session, sort_by=sort_by, order=order)
 
 
-@app.route("/tests/")
+@app.route("/test_description/")
 def test_description():
     mdUnitTests = getMdUnitTests()
 
