@@ -2,7 +2,7 @@ conf/
 *.pyc
 
 # database file
-db/*
+mdchecker/db/*
 
 # virtualenv dir
 venv/*
