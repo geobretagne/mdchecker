@@ -9,6 +9,9 @@ import datetime
 
 from flask import request
 from flask import render_template
+from flask import url_for
+from flask import redirect
+from flask import abort
 from flask import jsonify
 
 from inspirobot import Inspirobot
@@ -119,158 +122,233 @@ def getArgsFromQuery(request):
     parses and validates query arguments
     """
     args = {}
-    
-    # missing validation
-    args['format'] = request.args.get('format', '')
-    
+
     # missing validation
     args['OrganisationName'] = request.args.get('OrganisationName', '')
-    
+
     # missing validation
     args['anytext'] = request.args.get('anytext', '')
-    
-    args['maxharvest'] = min(int(request.args.get(
-        'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
-    args['nextrecord'] = int(request.args.get('nextrecord', default=0, type=int))
 
-    if request.args.get('sortby') in ['score', 'uuid', 'title', 'OrganisationName', 'date']:
-        args['sortby'] = request.args.get('sortby')
-    
-    # missing validation
-    args['id'] = request.args.get('id', '')
+    if request.path == "/quick_test/":
+        # missing validation
+        args['format'] = request.args.get('format', '')
+
+        # missing validation
+        args['id'] = request.args.get('id', '')
+
+        if request.args.get('sortby') in ['score', 'uuid', 'title', 'OrganisationName', 'date']:
+            args['sortby'] = request.args.get('sortby')
+
+        args['nextrecord'] = int(request.args.get('nextrecord', default=0, type=int))
+
+        args['maxharvest'] = min(int(request.args.get(
+            'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
+
+    elif request.path == "/new_session/creation/":
+
+        args['maxharvest'] = min(int(request.args.get(
+            'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
+
+        # missing validation
+        args['cswurl'] = request.args.get('cswurl', cfg["cswurl"])
+
     return args
 
 
 def doWeNeedToProcessRequest(request):
-    return (request.args.has_key('OrganisationName') or request.args.has_key('anytext') or
-        request.args.has_key('id') or request.args.has_key('format'))
+    return ('OrganisationName' in request.args or 'anytext' in request.args or
+            'id' in request.args or 'format' in request.args)
 
 
-def runTests(args, mdUnitTests):
-    """perform tests, return metadatas, count, score"""
-    metadatas = []
-    count = {'matches': 0, 'returned': 0}
-    score = 0
+class InspirobotWrapper(object):
 
-    # inspirobot instance
-    inspirobot = Inspirobot.Inspirobot()
-    if cfg.get('proxy', ''):
-        inspirobot.setproxy(cfg['proxy'])
+    def __init__(self, test_params, unit_tests):
+        self.md_records = None
+        self.metadatas = None
+        self.test_params = test_params
+        self.unit_tests = unit_tests
+        self.db = None
+        self.constraints_str = None
+        self.constraints_fes = None
 
-    if args['anytext'].strip() == "":
-        args['anytext'] = "*"
+        self.inspirobot = self.create_inspirobot_instance()
+        self.build_inspirobot_constraints()
 
-    if args['OrganisationName'].strip() == "":
-        args['OrganisationName'] = "*"
+    def set_db(self, database):
+        self.db = database
 
-    #do we still need this test?
-    if args['OrganisationName'] or args['anytext'] or args['id'] or args['format'] == 'json':
+    def create_inspirobot_instance(self):
+        inspirobot = Inspirobot.Inspirobot()
+        if cfg.get('proxy', ''):
+            inspirobot.setproxy(cfg['proxy'])
+        return inspirobot
 
-        # owslib constraint
-        constraintstr = u"Type = dataset  && anytext = %(anytext)s" % args
-        if args['OrganisationName']:
-            constraintstr += u" && OrganisationName = %(OrganisationName)s" % args
-        if args['id']:
-            constraintstr += u" && Identifier = %(id)s" % args
-        constraints = inspirobot.parseFilter(constraintstr)
+    def build_inspirobot_constraints(self):
+
+        constraints_inspirobot = u"Type = dataset  && anytext = %(anytext)s" % self.test_params
+
+        if self.test_params.get('OrganisationName', None) is not None:
+            constraints_inspirobot += u" && OrganisationName = %(OrganisationName)s" % self.test_params
+
+        if self.test_params.get('id', None) is not None:
+            constraints_inspirobot += u" && Identifier = %(id)s" % self.test_params
+
+        self.constraints_str = constraints_inspirobot
+        self.constraints_fes = self.inspirobot.parseFilter(self.constraints_str)
+
+    def run_unrecorded_tests(self):
 
         # get match count
-        count = inspirobot.mdcount(
-            cfg['cswurl'], constraints=constraints, startrecord=args['nextrecord'], maxharvest=args['maxharvest'])
+        count = self.inspirobot.mdcount(
+            cfg['cswurl'], constraints=self.constraints_fes,
+            startrecord=self.test_params['nextrecord'],
+            maxharvest=self.test_params['maxharvest'])
 
         # get metadatas
-        records = inspirobot.mdsearch(
+        self.md_records = self.inspirobot.mdsearch(
             cfg['cswurl'],
             esn='full',
-            constraints=constraints,
-            startrecord=args['nextrecord'],
+            constraints=self.constraints_fes,
+            startrecord=self.test_params['nextrecord'],
             maxrecords=cfg['maxrecords'],
-            maxharvest=args['maxharvest']
+            maxharvest=self.test_params['maxharvest']
         )
 
-        # Test session db record
-        ts = TestSession(
-            cat_url=cfg['cswurl'],
-            filter=constraintstr,
-            date=datetime.datetime.utcnow()
+        self.run_tests_on_md_records()
+
+        score = sum(md.score for md in self.metadatas) / max(len(self.metadatas), 1)
+
+        # metadata order
+        if self.test_params['sortby'] == 'score':
+            self.metadatas.sort(key=operator.attrgetter('score'))
+        elif self.test_params['sortby'] == 'uuid':
+            self.metadatas.sort(key=operator.attrgetter('fileIdentifier'))
+        elif self.test_params['sortby'] == 'title':
+            self.metadatas.sort(key=operator.attrgetter('title'))
+        elif self.test_params['sortby'] == 'OrganisationName':
+            self.metadatas.sort(key=operator.attrgetter('OrganisationName'))
+        elif self.test_params['sortby'] == 'date':
+            self.metadatas.sort(key=operator.attrgetter('date'))
+
+        return self.metadatas, count, score
+
+    def run_and_record_tests(self, database):
+
+        self.set_db(database)
+
+        # get match count
+        count = self.inspirobot.mdcount(
+            self.test_params['cswurl'],
+            constraints=self.constraint_fes,
+            startrecord=0,
+            maxharvest=1)
+
+        # update maxharvest
+        if not ('maxharvest' in self.test_params and isinstance(self.test_params["maxharvest"], (int, long))):
+            if isinstance(self.test_params["maxharvest"], (str, unicode)) and \
+                    self.test_params["maxharvest"].strip().lower() == 'all':
+                self.test_params["maxharvest"] = count["matches"]
+            else:
+                self.test_params["maxharvest"] = cfg["maxharvest"]
+        elif self.test_params["maxharvest"] > count["matches"]:
+            self.test_params["maxharvest"] = count["matches"]
+        elif self.test_params["maxharvest"] == -1:
+            self.test_params["maxharvest"] = count["matches"]
+        elif self.test_params["maxharvest"] < 1:
+            self.test_params["maxharvest"] = cfg["maxharvest"]
+
+        # get metadata records
+        self.md_records = self.inspirobot.mdsearch(
+            self.test_params['cswurl'],
+            esn='full',
+            constraints=self.constraints_fes,
+            startrecord=0,
+            maxrecords=cfg['maxrecords'],
+            maxharvest=self.test_params['maxharvest']
         )
-        db.session.add(ts)
+
+        new_session_id = self.run_tests_on_md_records(True)
+
+        return new_session_id
+
+    def run_tests_on_md_records(self, store_in_db=False):
+
+        self.metadatas = []
+        ts = None
+
+        if store_in_db:
+            # Test session db record
+            ts = TestSession(
+                cat_url=self.test_params['cswurl'],
+                filter=self.constraint_str,
+                date=datetime.datetime.utcnow()
+            )
+            self.db.session.add(ts)
 
         # run tests
-        for rec_id, rec in records.iteritems():
+        for rec_id, rec in self.md_records.iteritems():
             meta = Inspirobot.MD(rec.xml)
-            meta.run(mdUnitTests)
-            metadatas.append(meta)
+            meta.run(self.unit_tests)
+            self.metadatas.append(meta)
 
-            # resource metadata db record
-            # look for an existing metadata with the same cat_url and file_id
-            md = ResourceMd.query.filter_by(
-                cat_url=cfg['cswurl'],
-                file_id=meta.fileIdentifier
-            ).first()
-            if md is None and meta.MD_Identifier.strip() != "":
+            if store_in_db:
+                # resource metadata db record
+                # look for an existing metadata with the same cat_url and file_id
                 md = ResourceMd.query.filter_by(
-                    cat_url=cfg['cswurl'],
-                    res_uri=meta.MD_Identifier
+                    cat_url=self.test_params['cswurl'],
+                    file_id=meta.fileIdentifier
                 ).first()
-            if md is None:
-                md = ResourceMd(
-                    cat_url=cfg['cswurl'],
-                    file_id=meta.fileIdentifier,
-                    md_date=meta.md_date,
-                    res_date=meta.date,
-                    res_uri=meta.MD_Identifier,
-                    res_title=meta.title,
-                    res_abstract=meta.abstract,
-                    res_organisation_name=meta.OrganisationName
-                )
-                db.session.add(md)
-            else:
-                md.file_id = meta.fileIdentifier
-                md.md_date = meta.md_date
-                md.res_date = meta.date
-                md.res_uri = meta.MD_Identifier
-                md.res_title = meta.title
-                md.res_abstract = meta.abstract
-                md.res_organisation_name = meta.OrganisationName
-
-            # report for on medatada record and one test session in db
-            mr = MdReport(
-                test_session=ts,
-                md=md,
-                score=meta.score
-            )
-            db.session.add(mr)
-
-            for report in meta.reports:
-
-                for result in report.results:
-
-                    # result of one unit test in db
-                    unit_test_result = UnitTestResult(
-                        md_report = mr,
-                        test_id = report.name,
-                        test_result_level = result[0],
-                        test_result_text = result[1]
+                if md is None and meta.MD_Identifier.strip() != "":
+                    md = ResourceMd.query.filter_by(
+                        cat_url=self.test_params['cswurl'],
+                        res_uri=meta.MD_Identifier
+                    ).first()
+                if md is None:
+                    md = ResourceMd(
+                        cat_url=self.test_params['cswurl'],
+                        file_id=meta.fileIdentifier,
+                        md_date=meta.md_date,
+                        res_date=meta.date,
+                        res_uri=meta.MD_Identifier,
+                        res_title=meta.title,
+                        res_abstract=meta.abstract,
+                        res_organisation_name=meta.OrganisationName
                     )
-                    db.session.add(unit_test_result)
-        db.session.commit()
+                    self.db.session.add(md)
+                else:
+                    md.file_id = meta.fileIdentifier
+                    md.md_date = meta.md_date
+                    md.res_date = meta.date
+                    md.res_uri = meta.MD_Identifier
+                    md.res_title = meta.title
+                    md.res_abstract = meta.abstract
+                    md.res_organisation_name = meta.OrganisationName
 
-        score = sum(md.score for md in metadatas) / max(len(metadatas), 1)
-            
-        # metadata order
-        if args['sortby'] == 'score':
-            metadatas.sort(key=operator.attrgetter('score'))
-        elif args['sortby'] == 'uuid':
-            metadatas.sort(key=operator.attrgetter('fileIdentifier'))
-        elif args['sortby'] == 'title':
-            metadatas.sort(key=operator.attrgetter('title'))
-        elif args['sortby'] == 'OrganisationName':
-            metadatas.sort(key=operator.attrgetter('OrganisationName'))
-        elif args['sortby'] == 'date':
-            metadatas.sort(key=operator.attrgetter('date'))
-        
-    return metadatas, count, score
+                # report for on medatada record and one test session in db
+                mr = MdReport(
+                    test_session=ts,
+                    md=md,
+                    score=meta.score
+                )
+                db.session.add(mr)
+
+                for report in meta.reports:
+
+                    for result in report.results:
+
+                        # result of one unit test in db
+                        unit_test_result = UnitTestResult(
+                            md_report=mr,
+                            test_id=report.name,
+                            test_result_level=result[0],
+                            test_result_text=result[1]
+                        )
+                        db.session.add(unit_test_result)
+
+        if store_in_db:
+            db.session.commit()
+            db.session.refresh(ts)
+            return ts.id
 
 
 ### routes ######################################
@@ -289,8 +367,10 @@ def byId(md_id='', format='html'):
         'format':           format
     }
     mdUnitTests = getMdUnitTests()
-    metadatas, count, score = runTests(args, mdUnitTests)
-    
+    ins_wrapper = InspirobotWrapper(args, mdUnitTests)
+    metadatas, count, score = ins_wrapper.run_unrecorded_tests()
+
+
     if args['format'] == 'json':
         return jsonify(
             matches=count,
@@ -336,9 +416,8 @@ def quick_test():
     args.update(getArgsFromQuery(request))
 
     if doWeNeedToProcessRequest(request):
-        metadatas, count, score = runTests(args, mdUnitTests)
-    # if args['OrganisationName'] or args['anytext'] or args['id'] or args['format'] == 'json':
-    #     metadatas, count, score = runTests(args, mdUnitTests)
+        ins_wrapper = InspirobotWrapper(args, mdUnitTests)
+        metadatas, count, score = ins_wrapper.run_unrecorded_tests()
 
     if args['format'] == 'json':
         return jsonify(
@@ -363,7 +442,23 @@ def quick_test():
 @app.route("/new_session/")
 def new_session():
     return render_template('new_session.html', cfg=cfg)
-    return u"Under heavy construction... will come soon"
+
+
+@app.route("/new_session/creation/")
+def new_session_creation():
+
+    args = {}
+    args.update(getArgsFromQuery(request))
+
+    mdUnitTests = getMdUnitTests()
+
+    ins_wrapper = InspirobotWrapper(args, mdUnitTests)
+    new_session_id = ins_wrapper.run_and_record_tests(db)
+
+    if new_session_id is not None:
+        return redirect(url_for("session_by_id", id=new_session_id))
+    else:
+        abort(500)
 
 
 @app.route("/sessions/")
@@ -379,6 +474,9 @@ def session_by_id(id=None):
     session = TestSession.query.filter_by(
                 id=id
             ).first()
+
+    if session is None:
+        abort(404)
 
     sort_by = "score"
 
@@ -432,6 +530,12 @@ def test_description():
     mdUnitTests = getMdUnitTests()
 
     return render_template('test_description.html', cfg=cfg, tests=mdUnitTests)
+
+
+@app.errorhandler(404)
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template("error.html", error=e)
 
 
 def object_list(template_name, query, paginate_by=10, **context):

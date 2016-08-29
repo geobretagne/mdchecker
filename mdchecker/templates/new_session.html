@@ -1,5 +1,87 @@
 {% extends "base.html" %}
 
+{% block extra_styles %}
+    <style rel="stylesheet" type="text/css">
+        .form-filter-header {
+            font-weight: 700;
+            color: #959595;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-    <h1>Page under construction</h1>
+
+    <h2>Nouvelle session <small>Page under construction...</small></h2>
+
+    <form class="form-horizontal" method="GET" action="/new_session/creation/">
+        <!-- org -->
+        <div class="form-group">
+            <label for="cswurl" class="col-sm-3 control-label">Adresse du service CSW</label>
+            <div class="col-sm-5">
+                <input type="text"
+                    name="cswurl"
+                    class="form-control"
+                    type="url"
+                    value="{{cfg['cswurl']}}"
+                    placeholder="adresse du service web CSW à interroger"/>
+                <small class="text-muted">Si vous ne saisissez aucune valeur, le catalogue par défaut indiqué dans la
+                    configuration de MDChecker sera utilisé.
+                </small>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-3">&nbsp;</div>
+            <div class="col-sm-5 form-filter-header">Filtres</div>
+        </div>
+
+        <!-- org -->
+        <div class="form-group row">
+            <label for="OrganisationName" class="col-sm-3 control-label">Nom d'organisme</label>
+            <div class="col-sm-5">
+                <input type="text"
+                    name="OrganisationName"
+                    class="form-control"
+                    placeholder="nom de l'organisation (correspondance exacte)"/>
+                <small class="text-muted">Laissez vide ce champ pour n'opérer aucun filtre sur les noms des organismes</small>
+            </div>
+        </div>
+
+        <!-- anytext -->
+        <div class="form-group row">
+            <label for="anytext" class="col-sm-3 control-label">Texte libre</label>
+            <div class="col-sm-5">
+                <input type="text"
+                    name="anytext"
+                    class="form-control"
+                    placeholder="texte libre dans les fiches"/>
+                <small class="text-muted">Pour n'opérer aucun filtre de type texte libre, laissez ce champ vide</small>
+            </div>
+        </div>
+
+        <!-- quantity -->
+        <div class="form-group row">
+            <label for="maxharvest" class="col-sm-3 control-label">Nombre maximum de fiches</label>
+            <div class="col-sm-5">
+                <input type="text"
+                    name="maxharvest"
+                    class="form-control"
+                    type="number"
+                    placeholder="nombre maximum de fiches testées"/>
+                <small class="text-muted">Au-delà de 100 fiches l'opération peut s'avérer lente.
+                    <br/>Laissez ce champ vide pour tester le nombre maximum de fiches indiqué dans la
+                    configuration de MDChecker.
+                    <br/>Pour tester l'ensemble des fiches du serveur (peut être très lent), saisissez <em>-1</em>.
+                </small>
+            </div>
+        </div>
+
+        <!-- submit -->
+        <div class="form-group row">
+            <div class="col-sm-6 pull-right">
+                <button type="submit" class="btn btn-default">Créer la session de test</button>
+            </div>
+        </div>
+
+    </form>
 {% endblock %}
