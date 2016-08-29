@@ -86,8 +86,10 @@
 
     <!-- test results -->
     {% set reports = object_list.items %}
-    {% if display|default("cards", true) == "cards" %}
-        {% if reports|length > 0 %}
+    {% if reports|length < 1 %}
+    <p>Aucun résultat de test n'est présent en base de données pour cette session</p>
+    {% else %}
+        {% if display|default("cards", true) == "cards" %}
 
     <div class="row">
     {% for report in reports %}
@@ -137,16 +139,16 @@
             </div>
         </div>
 
+
     {% endfor %}
     </div>
+    {% include "include_page_links.html" %}
 
-        {% endif %}
-    {% elif display=="list" %}
+        {% elif display=="list" %}
 
     <div class="panel panel-default">
         <div class="panel-heading">Résultats des tests</div>
         <div class="panel-body">
-            {% if reports|length > 0 %}
             <table class="table table-hover table-condensed">
                 <thead>
                     <tr>
@@ -188,11 +190,9 @@
 
             {% include "include_page_links.html" %}
 
-            {% else %}
-            <p>Aucune résult de test n'est présent en base de données pour cette session</p>
-            {% endif %}
         </div>
     </div>
+        {% endif %}
     {% endif %}
 
 {% endblock %}
