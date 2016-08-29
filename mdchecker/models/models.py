@@ -2,6 +2,7 @@
 from mdchecker.main import db
 from sqlalchemy import func
 
+
 class ResourceMd(db.Model):
     __tablename__ = 'resource_md'
     id = db.Column(db.Integer, primary_key=True)
@@ -38,7 +39,7 @@ class TestSession(db.Model):
         return self.md_reports.count()
 
     def get_nb_test_types(self):
-        return self.md_reports.join(UnitTestResult).with_entities("test_id").distinct().count()
+        return self.md_reports.join(UnitTestResult).with_entities("test_name").distinct().count()
 
     def get_average_md_score(self):
         return self.md_reports.with_entities(func.avg(MdReport.score).label('average_score')).first()[0]
@@ -52,6 +53,7 @@ class TestSession(db.Model):
         total_md = self.get_nb_md_tested()
         nb_md = self.md_reports.filter(MdReport.score < 20).count()
         return nb_md*100/total_md
+
 
 class MdReport(db.Model):
     __tablename__ = 'md_report'
@@ -74,7 +76,8 @@ class UnitTestResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     md_report_id = db.Column(db.Integer, db.ForeignKey('md_report.id'))
     md_report = db.relationship('MdReport', backref=db.backref('unit_test_results', lazy='dynamic'))
-    test_id = db.Column(db.String(16))
+    test_name = db.Column(db.String(16))
+    test_abstract = db.Column(db.String(256))
     test_result_level = db.Column(db.String(16))
     test_result_text = db.Column(db.String(1024))
 

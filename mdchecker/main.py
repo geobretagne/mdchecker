@@ -117,6 +117,12 @@ def getMdUnitTests():
     return [test(cfg) for test in Inspirobot.MdUnitTest.__subclasses__()]
 
 
+def getMdUnitTestsAsDict():
+    unit_tests = getMdUnitTests()
+    unit_tests_names = [unit_test.name for unit_test in unit_tests]
+    return dict(zip(unit_tests_names, unit_tests))
+
+
 def getArgsFromQuery(request):
     """
     parses and validates query arguments
@@ -239,7 +245,7 @@ class InspirobotWrapper(object):
         # get match count
         count = self.inspirobot.mdcount(
             self.test_params['cswurl'],
-            constraints=self.constraint_fes,
+            constraints=self.constraints_fes,
             startrecord=0,
             maxharvest=1)
 
@@ -280,7 +286,7 @@ class InspirobotWrapper(object):
             # Test session db record
             ts = TestSession(
                 cat_url=self.test_params['cswurl'],
-                filter=self.constraint_str,
+                filter=self.constraints_str,
                 date=datetime.datetime.utcnow()
             )
             self.db.session.add(ts)
@@ -339,7 +345,8 @@ class InspirobotWrapper(object):
                         # result of one unit test in db
                         unit_test_result = UnitTestResult(
                             md_report=mr,
-                            test_id=report.name,
+                            test_name=report.name,
+                            test_abstract=report.abstract,
                             test_result_level=result[0],
                             test_result_text=result[1]
                         )
@@ -369,7 +376,6 @@ def byId(md_id='', format='html'):
     mdUnitTests = getMdUnitTests()
     ins_wrapper = InspirobotWrapper(args, mdUnitTests)
     metadatas, count, score = ins_wrapper.run_unrecorded_tests()
-
 
     if args['format'] == 'json':
         return jsonify(
@@ -480,6 +486,7 @@ def session_by_id(id=None):
 
     sort_by = "score"
 
+    display = request.args.get('display')
     request_sort_by = request.args.get('sort_by')
     if request_sort_by:
         request_sort_by = request_sort_by.lower().strip()
@@ -522,7 +529,8 @@ def session_by_id(id=None):
         else:
             query = session.md_reports.join(ResourceMd).order_by("md_date desc")
 
-    return object_list('session_id.html', query, cfg=cfg, session=session, sort_by=sort_by, order=order)
+    return object_list('session_id.html', query, cfg=cfg, session=session,
+                       sort_by=sort_by, order=order, display=display)
 
 
 @app.route("/test_description/")

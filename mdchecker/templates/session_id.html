@@ -5,7 +5,25 @@
     .nowrap {
         white-space: nowrap;
     }
+
+{% include "include_md_cards_css.html" %}
+
 </style>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        $(function () {
+            $(".md-test a").popover({
+                html: true,
+                content: function() {
+                    return $($(this).children('span')).html();
+                },
+                placement: "bottom",
+                trigger: "hover focus"}
+            );
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -31,7 +49,7 @@
     <form class="form-horizontal" method="GET" action=".">
 
         <!-- sortby -->
-        <div class="form-group">
+        <div class="form-group form-group-sm">
             <label for="sort_by" class="col-sm-2 control-label">Trier par</label>
             <div class="col-sm-4">
                 <select name="sort_by" class="form-control" onchange="this.form.submit()">
@@ -44,7 +62,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group form-group-sm">
             <label for="order" class="col-sm-2 control-label">Ordre</label>
             <div class="col-sm-4">
                 <select name="order" class="form-control" onchange="this.form.submit()">
@@ -54,12 +72,80 @@
             </div>
         </div>
 
+        <div class="form-group form-group-sm">
+            <label for="display" class="col-sm-2 control-label">Mode d'affichage</label>
+            <div class="col-sm-4">
+                <select name="display" class="form-control" onchange="this.form.submit()">
+                    <option value="cards" {% if display == "cards" %}selected{% endif %}>Cartes</option>
+                    <option value="list" {% if display == "list" %}selected{% endif %}>Liste</option>
+                </select>
+            </div>
+        </div>
+
     </form>
+
+    <!-- test results -->
+    {% set reports = object_list.items %}
+    {% if display|default("cards", true) == "cards" %}
+        {% if reports|length > 0 %}
+
+    <div class="row">
+    {% for report in reports %}
+        {% set md = report.md %}
+        {% if report.score==100 %}
+            {% set rank = "perfect" %}
+        {% elif report.score>=80 %}
+            {% set rank = "good" %}
+        {% elif report.score>=40 %}
+            {% set rank = "average" %}
+        {% elif report.score>=40 %}
+            {% set rank = "bad" %}
+        {% elif report.score>=40 %}
+            {% set rank = "ugly" %}
+        {% endif %}
+
+        <div class="col-md-4 col-lg-3" id="{{md.file_id}}">
+
+            <div class="panel panel-default md-md {{rank}}">
+                <div class="panel-heading">
+                    <div class="md-score">
+                        <a href="/md/{{md.file_id}}/html" class="md-retest badge">{{report.score}}</a>
+                    </div>
+                    {{md.res_title}}
+                    {% if md.res_date %}<span class="md-date">({{md.res_date}})</span>{% endif %}
+                </div>
+                <div class="panel-body">
+                    <!-- contact -->
+                    <p class="md-contact">
+                        {{md.res_organisation_name}}
+                    </p>
+
+                    <!-- resource description -->
+                    <p class="md-title" title="{{md.res_abstract}}">{{md.title}}</p>
+                    <!-- tests -->
+                    <p class="md-test">
+                        {% for t in report.unit_test_results:%}
+                        <a href="#" class="{{t.test_result_level}}" role="button" data-toggle="popover"  title="{{t.test_abstract}}">
+                            {{t.test_name}}
+                            <span style="display: none">
+                                {{t.test_result_level}}&nbsp;: {{t.test_result_text}}
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    {% endfor %}
+    </div>
+
+        {% endif %}
+    {% elif display=="list" %}
 
     <div class="panel panel-default">
         <div class="panel-heading">Résultats des tests</div>
         <div class="panel-body">
-            {% set reports = object_list.items %}
             {% if reports|length > 0 %}
             <table class="table table-hover table-condensed">
                 <thead>
@@ -107,4 +193,7 @@
             {% endif %}
         </div>
     </div>
+
+    {% endif %}
+
 {% endblock %}
