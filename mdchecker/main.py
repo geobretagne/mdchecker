@@ -263,6 +263,9 @@ class InspirobotWrapper(object):
         elif self.test_params["maxharvest"] < 1:
             self.test_params["maxharvest"] = cfg["maxharvest"]
 
+        if count['matches'] == 0:
+            self.test_params["maxharvest"] = 1
+
         # get metadata records
         self.md_records = self.inspirobot.mdsearch(
             self.test_params['cswurl'],
