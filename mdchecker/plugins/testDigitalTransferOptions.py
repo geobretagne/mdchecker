@@ -40,12 +40,12 @@ class MdUnitTestDigitalTransferOptions(Inspirobot.MdUnitTest):
             protocol = olnode.xpath(self.xpath['protocol'], namespaces=self.cfg['ns'])
             uri = olnode.xpath(self.xpath['URL'], namespaces=self.cfg['ns'])
             # results in our test results class
-            rep = Inspirobot.MdUnitTestReport('DTO', u'vérification digitalTransferOption')
+            rep = Inspirobot.MdUnitTestReport('DTO', u'Vérification digitalTransferOption')
             if protocol and uri:
                 rep.setUrl(uri[0])
                 # DTO WMS
                 if protocol[0] == 'OGC:WMS':
-                    rep.setNameAbstract('WMS', u'vérification WMS')
+                    rep.setNameAbstract('WMS', u'WMS. Vérifie le renseignement des liens WMS.')
                     if re.match(self.re['WMSCapabilities'], uri[0], re.I) and re.match(self.re['url'], uri[0]):
                         rep.addResult('debug', u'getCapabilities trouvé')
                         layername = olnode.xpath(self.xpath['layername'], namespaces=self.cfg['ns'])
@@ -60,7 +60,7 @@ class MdUnitTestDigitalTransferOptions(Inspirobot.MdUnitTest):
                         rep.addResult('error', u'getCapabilities n\'est pas une URL : %s' % rep.url)
                 # DTO WFS
                 elif protocol[0] == 'OGC:WFS':
-                    rep.setNameAbstract('WFS', u'vérification WFS')
+                    rep.setNameAbstract('WFS', u'WFS. Vérifie le renseignement des liens WFS.')
                     if re.match(self.re['WFSCapabilities'], uri[0], re.I) and re.match(self.re['url'], uri[0]):
                         rep.addResult('debug', u'getCapabilities trouvé')
                         featuretype = olnode.xpath(self.xpath['featuretype'], namespaces=self.cfg['ns'])
@@ -73,7 +73,7 @@ class MdUnitTestDigitalTransferOptions(Inspirobot.MdUnitTest):
                         rep.addResult('warning', u'getCapabilities suspect : %s' % rep.url)
                 # DTO WCS
                 elif protocol[0] == 'OGC:WCS':
-                    rep.setNameAbstract('WCS', u'vérification WCS')
+                    rep.setNameAbstract('WCS', u'WCS. Vérifie le renseignement des liens WCS.')
                     if re.match(self.re['WCSCapabilities'], uri[0], re.I) and re.match(self.re['url'], uri[0]):
                         rep.addResult('debug', u'getCapabilities trouvé')
                         download = True
@@ -82,21 +82,21 @@ class MdUnitTestDigitalTransferOptions(Inspirobot.MdUnitTest):
                 # DTO download
                 elif protocol[0] == 'WWW:DOWNLOAD-1.0-http--download':
                     if re.match(self.re['url'], uri[0]):
-                        rep.setNameAbstract(u'DL', u'vérification téléchargement')
+                        rep.setNameAbstract(u'DL', u'Vérifie la conformité des liens de téléchargement')
                         rep.addResult('debug', u'URL téléchargement trouvée')
                         download = True
                     else:
                         rep.addResult('error', 'mauvaise URL : %s' % rep.url)
                 # DTO web
                 elif protocol[0] == 'WWW:LINK-1.0-http--link':
-                    rep.setNameAbstract('WWW', u'vérification lien web')
+                    rep.setNameAbstract('WWW', u'Vérifie la conformité des liens vers des pages web')
                     if re.match(self.re['url'], uri[0]):
                         rep.addResult('debug', u'URL trouvée')
                     else:
                         rep.addResult('error', u'mauvaise URL : %s' % rep.url)
                 # DTO unknown
                 else:
-                    rep.setNameAbstract(u'WW?', u'vérification lien web')
+                    rep.setNameAbstract(u'WW?', u'Vérifie la conformité des autres URL')
                     if re.match(self.re['url'], uri[0]):
                         rep.addResult('debug', u'URL trouvée')
                     else:
@@ -105,13 +105,13 @@ class MdUnitTestDigitalTransferOptions(Inspirobot.MdUnitTest):
                 rep.addResult('warning', u'protocole manquant')
             self.addReport(rep)
             
-        rep = Inspirobot.MdUnitTestReport('view', u'service visualisation')
+        rep = Inspirobot.MdUnitTestReport('view', u"Vérifie la présence d'un service de visualisation")
         if view:
             rep.addResult('info', u'service visualisation trouvé')
         else:
             rep.addResult('error', u'service visualisation non trouvé')
         self.addReport(rep)
-        rep = Inspirobot.MdUnitTestReport('download', u'service téléchargement')
+        rep = Inspirobot.MdUnitTestReport('download', u"Vérifie la présence d'un service de téléchargement")
         if download:
             rep.addResult('info', u'service téléchargement trouvé')
         else:

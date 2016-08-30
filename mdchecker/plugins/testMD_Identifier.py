@@ -8,8 +8,8 @@ class MdUnitTestMdIdentifier(Inspirobot.MdUnitTest):
     """check MD_Identifier'"""
     def set(self):
         self.name = 'ID'
-        self.abstract = u"Vérification MD_Identifier. " \
-                        u"On vérifie qu'il est présent et qu'il se conforme à une expression régulière."
+        self.abstract = u"MD_Identifier. " \
+                        u"Vérifie sa présence et sa conformité à une expression régulière."
         self.xpath = {
             'MD_Identifier': u"/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/"
                              u"gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/"

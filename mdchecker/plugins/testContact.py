@@ -8,7 +8,7 @@ class MdUnitTestContact(Inspirobot.MdUnitTest):
     """test mail address for md author and data provider"""
     def set(self):
         self.name = u'MAIL'
-        self.abstract = u'Vérifie que les contacts partie responsable et contact comprennent ' \
+        self.abstract = u'Email. Vérifie que les contacts pour la ressource et pour les métadonnées comprennent ' \
                         u'chacun une adresse mail bien formée.'
         self.xpath = {
             'mailResponsibleParty': u"/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/"
@@ -33,15 +33,15 @@ class MdUnitTestContact(Inspirobot.MdUnitTest):
             if re.match(self.re['mail'], noderp[0], re.I):
                 rep.addResult('debug', u'partie responsable %s' % noderp[0])
             else:
-                rep.addResult('error', u'mail partie responsable mal formé : %s' % noderp[0])
+                rep.addResult('error', u'mail contact pour la ressource mal formé : %s' % noderp[0])
         else:
-            rep.addResult('error', u'mail partie responsable manquant')
+            rep.addResult('error', u'mail contact pour la ressource manquant')
 
         if len(nodect) > 0:
             if re.match(self.re['mail'], nodect[0], re.I):
                 rep.addResult('debug', u'contact %s' % nodect[0])
             else:
-                rep.addResult('error', u'mail contact mal formé : %s' % nodect[0])
+                rep.addResult('error', u'mail contact pour les métadonnées mal formé : %s' % nodect[0])
         else:
-            rep.addResult('error', u'mail contact manquant')
+            rep.addResult('error', u'mail contact pour les métadonnées manquant')
         self.addReport(rep)

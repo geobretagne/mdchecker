@@ -30,17 +30,17 @@ class MdUnitTestLicence(Inspirobot.MdUnitTest):
         uselimitation = md.xpath(self.xpath['uselimitation'], namespaces=self.cfg['ns'])
         restriction = md.xpath(self.xpath['restrictions'], namespaces=self.cfg['ns'])
         if len(uselimitation) > 0:
-            rep2.setNameAbstract(u'LIMIT', u'limitation et restriction')
+            rep2.setNameAbstract(u'LIMIT', u'useLimitation. Vérifie la longueur de ce champ.')
             if len(uselimitation[0]) > 25:
                 rep2.addResult('debug', u'useLimitation : %s' % uselimitation[0])
             else: 
                 rep2.addResult('debug', u'useLimitation < 25 char : %s' % uselimitation[0])
         else:
-            rep2.setNameAbstract(u'LIC', u'licence')
+            rep2.setNameAbstract(u'LIC', u'Licence. Vérifie la présence de useLimitation.')
             rep2.addResult('error', u'useLimitation manquant')
         
         if len(restriction) > 0:
-                rep2.addResult('debug', u'otherRestrictions : %s' % restriction[0])
+            rep2.addResult('debug', u'otherRestrictions : %s' % restriction[0])
         else:
             rep2.addResult('error', u'otherRestrictions manquant')
         self.addReport(rep2)
@@ -49,7 +49,7 @@ class MdUnitTestLicence(Inspirobot.MdUnitTest):
         node_kwol = md.xpath(self.xpath['opendata'], namespaces=self.cfg['ns'])
         if len(node_kwol) == 1:
             rep1 = Inspirobot.MdUnitTestReport(self.name, self.abstract)
-            rep1.setNameAbstract('OPEN', u'donnée ouverte')
+            rep1.setNameAbstract('OPEN', u'Données ouvertes. Recherche la présence du mot-clé.')
             rep1.addResult('info', u'keyword données ouvertes détecté')
             if len(md.xpath(self.xpath['constraints'], namespaces=self.cfg['ns'])) != 1:
                 rep1.addResult('warning', u'otherConstraints incorrect')
