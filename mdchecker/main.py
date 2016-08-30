@@ -50,7 +50,8 @@ cfg = {
         "testContact.py",
         "testLicence.py",
         "testInspireKeyword.py",
-        "testDigitalTransferOptions.py"
+        "testDigitalTransferOptions.py",
+        "testDefault.py"
     ],
     'mail_md': u"""la_metadonnee
 %s%s
