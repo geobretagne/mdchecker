@@ -2,3 +2,4 @@ owslib
 flask
 lxml
 pyshp
+flask_sqlalchemy
