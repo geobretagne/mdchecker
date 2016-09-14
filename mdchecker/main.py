@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import imp
 import os
+import io
+import csv
 import urllib
 import json
 import operator
@@ -9,6 +11,7 @@ import datetime
 
 from flask import request
 from flask import render_template
+from flask import Response
 from flask import url_for
 from flask import redirect
 from flask import abort
@@ -436,6 +439,13 @@ def quick_test():
             score=score,
             metadatas=[md.asDict() for md in metadatas]
         )
+    if args['format'] == 'csv':
+            output = io.BytesIO()
+            writer = csv.writer(output)
+            writer.writerow( ('score', 'date', 'organisation', 'title', 'MD_Identifier') )
+            for md in metadatas:
+                writer.writerow( (md.score, md.md_date, u(md.OrganisationName), u(md.MD_Identifier), u(md.title)) )
+            return Response(output.getvalue(), mimetype='text/csv')
     else:
         # paging for html
         pageUrls = [(n, getPermalink({
