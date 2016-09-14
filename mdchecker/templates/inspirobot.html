@@ -176,6 +176,9 @@
     <!-- test results -->
     {% if metas|length > 0 %}
     <div class="row">
+
+        <h4>Score moyen par fiche : {{score}}/100</h4>
+
     {% for md in metas %}
         {% if md.score==100 %}
             {% set rank = "perfect" %}
