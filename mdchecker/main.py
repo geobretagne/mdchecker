@@ -226,6 +226,7 @@ class InspirobotWrapper(object):
         score = sum(md.score for md in self.metadatas) / max(len(self.metadatas), 1)
 
         # metadata order
+        obsolete_date = datetime.datetime(1970,1,1)
         if self.test_params['sortby'] == 'score':
             self.metadatas.sort(key=operator.attrgetter('score'))
         elif self.test_params['sortby'] == 'uuid':
@@ -235,7 +236,7 @@ class InspirobotWrapper(object):
         elif self.test_params['sortby'] == 'OrganisationName':
             self.metadatas.sort(key=operator.attrgetter('OrganisationName'))
         elif self.test_params['sortby'] == 'date':
-            self.metadatas.sort(key=operator.attrgetter('date'))
+            self.metadatas.sort(key=lambda x: x.date or obsolete_date)
 
         return self.metadatas, count, score
 
