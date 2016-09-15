@@ -1,4 +1,5 @@
-conf/
+mdchecker/conf/*.json
+mdchecker/conf/*.cfg
 *.pyc
 
 # database file
