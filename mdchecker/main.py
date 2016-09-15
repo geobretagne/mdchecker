@@ -441,10 +441,10 @@ def quick_test():
         )
     if args['format'] == 'csv':
             output = io.BytesIO()
-            writer = csv.writer(output)
-            writer.writerow( ('score', 'date', 'organisation', 'title', 'MD_Identifier') )
+            writer = csv.writer(output, dialect=csv.excel)
+            writer.writerow( ('score', 'date', 'md_date', 'organisation', 'title','html', 'xml') )
             for md in metadatas:
-                writer.writerow( (md.score, md.md_date, u(md.OrganisationName), u(md.MD_Identifier), u(md.title)) )
+                writer.writerow( (md.score, md.date, md.md_date, u(md.OrganisationName), u(md.title), cfg["viewurlprefix"]+md.fileIdentifier, cfg["xmlurlprefix"]+md.fileIdentifier) )
             return Response(output.getvalue(), mimetype='text/csv')
     else:
         # paging for html
