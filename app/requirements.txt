@@ -1,5 +1,6 @@
-OWSLib
+uwsgi
 flask
+flask_sqlalchemy
+OWSLib
 lxml
 pyshp
-flask_sqlalchemy
