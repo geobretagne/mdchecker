@@ -13,6 +13,11 @@ DEBUG = False
 #
 SECRET_KEY = 'NTVEUZTNEYHZVNTHZAONTZAOVNOAZIONV5HIOZA'
 
+#db
+import os
+APPLICATION_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "db")
+SQLALCHEMY_DATABASE_URI = "sqlite:///{0}/mdchecker.db".format(APPLICATION_DIR)
+
 #
 # bind to host and port
 #
