@@ -1,4 +1,4 @@
-owslib
+OWSLib
 flask
 lxml
 pyshp
