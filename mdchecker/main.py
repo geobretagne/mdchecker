@@ -8,6 +8,7 @@ import urllib
 import json
 import operator
 import datetime
+import logging
 
 from flask import request
 from flask import render_template
@@ -26,6 +27,8 @@ from models.models import UnitTestResult
 from models.models import ResourceMd
 from models.models import TestSession
 from models.models import MdReport
+
+logging.basicConfig(level=logging.INFO)
 
 
 # default configuration
@@ -91,8 +94,11 @@ def u(s):
     """
     decodes utf8
     """
+    if isinstance(s, unicode): 
+        return s.encode('utf-8')
     if isinstance(s, str):
         return s.decode('utf-8')
+    # fix this, item may be unicode
     elif isinstance(s, list):
         return [i.decode('utf-8') for i in s]
 

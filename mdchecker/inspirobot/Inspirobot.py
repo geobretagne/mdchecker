@@ -38,16 +38,18 @@ def xmlGetTextNodes(doc, xpath, namespaces):
 
 
 def parse_string_for_max_date(dates_as_str):
-
-    dates_python = []
-    for date_str in dates_as_str.split(","):
-        date_str = date_str.strip()
-        if date_str != "":
-            date_python = dateutil.parser.parse(date_str, ignoretz=True)
-            dates_python.append(date_python)
-    if len(dates_python) > 0:
-        return max(dates_python)
-
+    try:
+        dates_python = []
+        for date_str in dates_as_str.split(","):
+            date_str = date_str.strip()
+            if date_str != "":
+                date_python = dateutil.parser.parse(date_str, ignoretz=True)
+                dates_python.append(date_python)
+        if len(dates_python) > 0:
+            return max(dates_python)
+    except:
+        logging.error('date parsing error : ' +dates_as_str)
+        return None
 
 ################################################
 
@@ -359,13 +361,26 @@ class MD:
             '/gmd:MD_Metadata/gmd:identificationInfo/'
             'gmd:MD_DataIdentification/gmd:abstract/gco:CharacterString/text()',
             self.namespaces)
+
+        # date or datetime ?
         dates_str = xmlGetTextNodes(
+            self.md,
+            '/gmd:MD_Metadata/gmd:identificationInfo/'
+            'gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/'
+            'gmd:date/gmd:CI_Date/gmd:date/gco:Date/text()',
+            self.namespaces)
+        datetimes_str = xmlGetTextNodes(
             self.md,
             '/gmd:MD_Metadata/gmd:identificationInfo/'
             'gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/'
             'gmd:date/gmd:CI_Date/gmd:date/gco:DateTime/text()',
             self.namespaces)
-        self.date = parse_string_for_max_date(dates_str)
+        if dates_str != "":
+            self.date = parse_string_for_max_date(dates_str)
+        else:
+            self.date = parse_string_for_max_date(datetimes_str)
+        
+        # seems always datetime
         md_dates_str = xmlGetTextNodes(
             self.md,
             '/gmd:MD_Metadata/gmd:dateStamp/'
