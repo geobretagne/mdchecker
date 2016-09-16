@@ -1,9 +1,9 @@
-mdchecker/conf/*.json
-mdchecker/conf/*.cfg
+app/mdchecker/conf/*.json
+app/mdchecker/conf/*.cfg
 *.pyc
 
 # database file
-mdchecker/db/*.db
+app/mdchecker/db/*.db
 
 # virtualenv dir
 venv/*
