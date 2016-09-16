@@ -19,6 +19,6 @@ APPLICATION_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(
 SQLALCHEMY_DATABASE_URI = "sqlite:///{0}/mdchecker.db".format(APPLICATION_DIR)
 
 #
-# bind to host and port
+# server name matching reverse proxy SERVER_NAME variable
 #
-SERVER_NAME = '127.0.0.1:5000'
+SERVER_NAME = 'mydomain.com'
