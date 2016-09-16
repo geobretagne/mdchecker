@@ -14,7 +14,8 @@ This tool works well with [geOrchestra SDI](http://georchestra.org). Using it wi
 
 Build image:
 ```
-docker build -t geobretagne/mdchecker .
+git clone https://github.com/geobretagne/mdchecker.git
+cd mdchecker && docker build -t geobretagne/mdchecker .
 ```
 
 Run it with:
