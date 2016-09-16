@@ -3,7 +3,7 @@
 (c) GeoBretagne for the geOrchestra project
 
 This is a simple quality assurance tool performing unit tests on a CSW-enabled catalog.
-Read INSTALL.md to get it work.
+Read [INSTALL.md](./INSTALL.md) to get it work.
 
 [GeoBretagne](http://geobretagne.fr/) uses this tool to evaluate metadatas, quick fix errors, immediately see the result and keep an eye on the catalog global score.
 
