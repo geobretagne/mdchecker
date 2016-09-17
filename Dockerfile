@@ -1,10 +1,14 @@
-FROM python:2.7.12
+FROM python:2.7
 
-MAINTAINER XX "YY@geobretagne.fr"
+MAINTAINER Fabrice PHUNG "fabrice.phung@geobretagne.fr"
 # Inspired by https://github.com/p0bailey/docker-flask/
 
 RUN apt-get update && \
-    apt-get install -y uwsgi-plugin-python nginx supervisor && \
+    apt-get install -y \
+        uwsgi-plugin-python \
+        nginx \
+        supervisor \ 
+    && \
     rm -rf /var/lib/apt/lists/*
 
 COPY conf/flask.conf /etc/nginx/sites-available/
@@ -23,4 +27,6 @@ RUN chown -R www-data:www-data /var/www/app && \
 
 RUN ["python", "/var/www/app/create_db.py"]
 
-CMD ["/usr/bin/supervisord"]
+EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
