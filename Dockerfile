@@ -1,6 +1,7 @@
 FROM python:2.7.12
 
 MAINTAINER XX "YY@geobretagne.fr"
+# Inspired by https://github.com/p0bailey/docker-flask/
 
 RUN apt-get update && \
     apt-get install -y uwsgi-plugin-python nginx supervisor && \
