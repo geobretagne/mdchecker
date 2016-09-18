@@ -12,7 +12,6 @@ application.config.update(dict(
     #SERVER_NAME=os.getenv('MDCHECKER_SERVER_NAME', 'mydomain.com'), # FIXME, issue with this (404 on all pages)
     SECRET_KEY=os.getenv('MDCHECKER_SECRET_KEY', 'NTVEUZTNEYHZVNTHZAONTZAOVNOAZIONV5HIOZA'),
     SQLALCHEMY_DATABASE_URI='sqlite:///{0}/mdchecker.db'.format(os.getenv('MDCHECKER_DB_PATH', '/tmp'))
-    #DATABASE=os.path.join(application.root_path, 'mdchecker.db'),
 ))
 
 # TODO:

@@ -16,9 +16,5 @@ COPY app /app
 
 EXPOSE 5000
 
-#~ RUN ["python", "/app/create_db.py"]
-#~ ENTRYPOINT ["uwsgi"]
-#~ CMD ["--socket", "0.0.0.0:5000", "--module", "mdchecker", "--chdir", "/app"]
-
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uwsgi", "--socket", "0.0.0.0:5000", "--module", "mdchecker", "--chdir", "/app"]
