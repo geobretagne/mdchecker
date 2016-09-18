@@ -1,32 +1,24 @@
 FROM python:2.7
 
 MAINTAINER Fabrice PHUNG "fabrice.phung@geobretagne.fr"
-# Inspired by https://github.com/p0bailey/docker-flask/
 
-RUN apt-get update && \
-    apt-get install -y \
-        uwsgi-plugin-python \
-        nginx \
-        supervisor \ 
-    && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR "/app"
 
-COPY conf/flask.conf /etc/nginx/sites-available/
-COPY conf/supervisord.conf /etc/supervisor/conf.d/
-COPY app /var/www/app
+RUN pip install \
+    uwsgi \
+    flask \
+    flask_sqlalchemy \
+    OWSLib \
+    lxml \
+    pyshp
 
-RUN mkdir -p /var/log/nginx/app /var/log/uwsgi/app /var/log/supervisor && \
-    rm -f /etc/nginx/sites-enabled/default && \
-    ln -s /etc/nginx/sites-available/flask.conf /etc/nginx/sites-enabled/flask.conf && \
-    echo "daemon off;" >> /etc/nginx/nginx.conf
+COPY app /app
 
-RUN pip install -r /var/www/app/requirements.txt
+EXPOSE 5000
 
-RUN chown -R www-data:www-data /var/www/app && \
-    chown -R www-data:www-data /var/log
+#~ RUN ["python", "/app/create_db.py"]
+#~ ENTRYPOINT ["uwsgi"]
+#~ CMD ["--socket", "0.0.0.0:5000", "--module", "mdchecker", "--chdir", "/app"]
 
-RUN ["python", "/var/www/app/create_db.py"]
-
-EXPOSE 80
-
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["uwsgi", "--socket", "0.0.0.0:5000", "--module", "mdchecker", "--chdir", "/app"]

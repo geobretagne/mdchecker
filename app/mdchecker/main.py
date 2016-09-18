@@ -20,7 +20,7 @@ from flask import jsonify
 
 from inspirobot import Inspirobot
 
-from mdchecker import app
+from mdchecker import application
 from mdchecker import db
 
 from models.models import UnitTestResult
@@ -75,7 +75,7 @@ try:
         f.close()
     cfg.update(json.load(open(appfile)))
 except:
-    app.logger.error(u'cant read or write %s, using defaults' % appfile)
+    application.logger.error(u'cant read or write %s, using defaults' % appfile)
 
 # import plugins
 for plugin in cfg['plugins']:
@@ -83,9 +83,9 @@ for plugin in cfg['plugins']:
     if os.path.isfile(path):
         try:
             imp.load_source(plugin, path)
-            app.logger.info(u'module %s successfully loaded' % plugin)
+            application.logger.info(u'module %s successfully loaded' % plugin)
         except:
-            app.logger.error(u'module %s not loaded' % plugin)
+            application.logger.error(u'module %s not loaded' % plugin)
 
 ### utility fn #######################################
 
@@ -373,9 +373,9 @@ class InspirobotWrapper(object):
 
 
 ### routes ######################################
-@app.route('/md/')
-@app.route('/md/<md_id>')
-@app.route('/md/<md_id>/<format>')
+@application.route('/md/')
+@application.route('/md/<md_id>')
+@application.route('/md/<md_id>/<format>')
 def byId(md_id='', format='html'):
     args = {
         'OrganisationName': '',
@@ -410,12 +410,12 @@ def byId(md_id='', format='html'):
             metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
 
 
-@app.route("/")
+@application.route("/")
 def index():
     return render_template('index.html', cfg=cfg)
 
 
-@app.route("/quick_test/")
+@application.route("/quick_test/")
 def quick_test():
     args = {
         'OrganisationName': '',
@@ -466,12 +466,12 @@ def quick_test():
             metas=metadatas, count=count, pages=pageUrls)
 
 
-@app.route("/new_session/")
+@application.route("/new_session/")
 def new_session():
     return render_template('new_session.html', cfg=cfg)
 
 
-@app.route("/new_session/creation/")
+@application.route("/new_session/creation/")
 def new_session_creation():
 
     args = {}
@@ -488,14 +488,14 @@ def new_session_creation():
         abort(500)
 
 
-@app.route("/sessions/")
+@application.route("/sessions/")
 def session_list():
 
     sessions = TestSession.query
     return object_list('session_list.html', sessions, cfg=cfg)
 
 
-@app.route("/session/<id>/")
+@application.route("/session/<id>/")
 def session_by_id(id=None):
 
     session = TestSession.query.filter_by(
@@ -554,15 +554,15 @@ def session_by_id(id=None):
                        sort_by=sort_by, order=order, display=display)
 
 
-@app.route("/test_description/")
+@application.route("/test_description/")
 def test_description():
     mdUnitTests = getMdUnitTests()
 
     return render_template('test_description.html', cfg=cfg, tests=mdUnitTests)
 
 
-@app.errorhandler(404)
-@app.errorhandler(500)
+@application.errorhandler(404)
+@application.errorhandler(500)
 def page_not_found(e):
     return render_template("error.html", error=e)
 
