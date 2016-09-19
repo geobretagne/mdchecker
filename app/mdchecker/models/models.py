@@ -1,9 +1,10 @@
-#db tests
 from mdchecker.main import db
 from sqlalchemy import func
 
 
 class ResourceMd(db.Model):
+    """ResourceMd represents the metadata of a resource stored in a catalog
+    """
     __tablename__ = 'resource_md'
     id = db.Column(db.Integer, primary_key=True)
     cat_url = db.Column(db.String(512))
@@ -23,6 +24,8 @@ class ResourceMd(db.Model):
 
 
 class TestSession(db.Model):
+    """TestSession represents a session of tests
+    """
     __tablename__ = 'test_session'
     id = db.Column(db.Integer, primary_key=True)
     cat_url = db.Column(db.String(512))
@@ -56,6 +59,10 @@ class TestSession(db.Model):
 
 
 class MdReport(db.Model):
+    """MdReport represents a test report run on 1 resource metadata
+    1 MdReport instance is linked to 1 TestSession instance and 1 ResourceMd instance
+    1 MdReport instance is linked to many UnitTestResult instances
+     """
     __tablename__ = 'md_report'
     id = db.Column(db.Integer, primary_key=True)
     test_session_id = db.Column(db.Integer, db.ForeignKey('test_session.id'))
@@ -72,6 +79,8 @@ class MdReport(db.Model):
 
 
 class UnitTestResult(db.Model):
+    """UnitTestResult represents 1 result of a test on a specific resource metadata
+    """
     __tablename__ = 'unit_test_result'
     id = db.Column(db.Integer, primary_key=True)
     md_report_id = db.Column(db.Integer, db.ForeignKey('md_report.id'))
