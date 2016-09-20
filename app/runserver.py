@@ -1,5 +1,5 @@
 import optparse
-from mdchecker import application
+from mdchecker import app
 
 # courtesy of http://flask.pocoo.org/snippets/133/
 def flaskrun(app, default_host="127.0.0.1", 
@@ -47,4 +47,4 @@ def flaskrun(app, default_host="127.0.0.1",
         port=int(options.port)
     )
 
-flaskrun(application)
+flaskrun(app)

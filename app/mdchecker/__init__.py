@@ -2,11 +2,11 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
 
-application = Flask(__name__)
-application.jinja_env.add_extension('jinja2.ext.do')
+app = Flask(__name__)
+app.jinja_env.add_extension('jinja2.ext.do')
 
 # http://flask.pocoo.org/docs/0.10/config/#builtin-configuration-values
-application.config.update(dict(
+app.config.update(dict(
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     DEBUG=os.getenv('MDCHECKER_DEBUG', 'False') == 'True',
     #SERVER_NAME=os.getenv('MDCHECKER_SERVER_NAME', 'mydomain.com'), # FIXME, issue with this (404 on all pages)
@@ -17,6 +17,6 @@ application.config.update(dict(
 # TODO:
 #app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
-db = SQLAlchemy(application)
+db = SQLAlchemy(app)
 
 import mdchecker.main

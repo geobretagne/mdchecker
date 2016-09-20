@@ -17,4 +17,4 @@ COPY app /app
 EXPOSE 5000
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["uwsgi", "--socket", "0.0.0.0:5000", "--module", "mdchecker", "--chdir", "/app"]
+CMD ["uwsgi", "--socket", "0.0.0.0:5000", "--callable", "app", "--module", "mdchecker", "--chdir", "/app"]
