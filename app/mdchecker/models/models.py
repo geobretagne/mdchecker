@@ -49,11 +49,15 @@ class TestSession(db.Model):
 
     def get_percentage_md_upper_than_80(self):
         total_md = self.get_nb_md_tested()
+        if total_md == 0:
+            return 0
         nb_md = self.md_reports.filter(MdReport.score > 80).count()
         return nb_md*100/total_md
 
     def get_percentage_md_lower_than_20(self):
         total_md = self.get_nb_md_tested()
+        if total_md == 0:
+            return 0
         nb_md = self.md_reports.filter(MdReport.score < 20).count()
         return nb_md*100/total_md
 
