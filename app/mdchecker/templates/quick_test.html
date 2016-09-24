@@ -72,8 +72,8 @@
             <label for="cat" class="col-sm-2 control-label">catalogue</label>
             <div class="col-sm-4">
                 <select name="cat" class="form-control">
-                    {%for cat in cfg.cats %}
-                    <option value="{{cat.name}}">{{cat.name}}</option>
+                    {%for c in cfg.cats %}
+                    <option value="{{c.name}}" {% if cat.cswurl == c.cswurl %}selected{% endif %}>{{c.name}}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -161,7 +161,7 @@
     <!-- query params -->
     {% if metas|length > 0 %}
     <p>
-        catalogue : {{args.cswurl}} |
+        Catalogue : {{cat.name}} ({{cat.cswurl}}) |
         {% if count.returned>0 %}
             {% if args.anytext %}anytext : {{args.anytext}} | {% endif %}
             {%if args.id %}id : {{args.id}} | {% endif %}
@@ -211,8 +211,8 @@
                     <div class="md-score">
                         <a href="/md/{{md.fileIdentifier}}/html" class="md-retest badge">{{md.score}}</a>
                     </div>
-                    <a class="md-bt" href="{{cfg.viewurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view html">{{md.fileIdentifier}}</a>
-                    <a class="md-bt" href="{{cfg.xmlurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view xml">xml</a>
+                    <a class="md-bt" href="{{cat.viewurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view html">{{md.fileIdentifier}}</a>
+                    <a class="md-bt" href="{{cat.xmlurlprefix}}{{md.fileIdentifier}}" target="_blank" title="view xml">xml</a>
                     <br />
                     {{md.MD_Identifier}}
                     <span class="md-date">({{md.date}})</span>

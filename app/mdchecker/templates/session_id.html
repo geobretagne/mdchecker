@@ -113,7 +113,8 @@
                     <div class="md-score">
                         <a href="/md/{{md.file_id}}/html" class="md-retest badge">{{report.score}}</a>
                     </div>
-                    {{md.res_title}}
+                    <a class="md-bt" href="{{cat.viewurlprefix}}{{md.file_id}}" target="_blank" title="view html">{{md.res_title}}</a>
+                    <a class="md-bt" href="{{cat.xmlurlprefix}}{{md.file_id}}" target="_blank" title="view xml">xml</a>
                     {% if md.res_date %}<span class="md-date">({{md.res_date}})</span>{% endif %}
                 </div>
                 <div class="panel-body">

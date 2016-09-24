@@ -138,9 +138,9 @@ def getMdUnitTestsAsDict():
     return dict(zip(unit_tests_names, unit_tests))
 
 
-def getCatWithName(cat_name):
+def get_cat_with_name(cat_name):
     """
-    Returns the catalogue dictionary discribued in cfg with the given name
+    Returns the catalogue dictionary described in cfg with the given name
 
     @param cat_name:    Name of the catalogue
     @return:            dict describing the catalogue
@@ -150,6 +150,24 @@ def getCatWithName(cat_name):
 
     for cat in cfg["cats"]:
         if cat["name"] == cat_name:
+            the_cat = cat
+            break
+
+    return the_cat
+
+
+def get_cat_with_url(cat_url):
+    """
+    Returns the catalogue dictionary which url is given in parameter
+
+    @param cat_url:     URL of the catalogue
+    @return:            dict describing the catalogue
+    """
+
+    the_cat = None
+
+    for cat in cfg["cats"]:
+        if cat["cswurl"] == cat_url:
             the_cat = cat
             break
 
@@ -183,14 +201,14 @@ def getArgsFromQuery(request):
         args['maxharvest'] = min(int(request.args.get(
             'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
 
-        args['cswurl'] = getCatWithName(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
+        args['cswurl'] = get_cat_with_name(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
 
     elif request.path == "/new_session/creation/":
 
         args['maxharvest'] = min(int(request.args.get(
             'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
 
-        args['cswurl'] = getCatWithName(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
+        args['cswurl'] = get_cat_with_name(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
 
     return args
 
@@ -430,8 +448,9 @@ def byId(md_id='', format='html'):
             'maxharvest':args['maxharvest']}))
             for n in range(1+count['matches'] // args['maxharvest'])
         ]
+        cat = get_cat_with_url(args["cswurl"])
         return render_template(
-            'quick_test.html', cfg=cfg, args=args, score=score,
+            'quick_test.html', cfg=cfg, cat=cat, args=args, score=score,
             metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
 
 
@@ -486,8 +505,9 @@ def quick_test():
             for n in range(1+count['matches'] // args['maxharvest'])
         ]
 
+        cat = get_cat_with_url(args["cswurl"])
         return render_template(
-            'quick_test.html', cfg=cfg, args=args, score=score,
+            'quick_test.html', cfg=cfg, cat=cat, args=args, score=score,
             metas=metadatas, count=count, pages=pageUrls)
 
 
@@ -575,7 +595,8 @@ def session_by_id(id=None):
         else:
             query = session.md_reports.join(ResourceMd).order_by("md_date desc")
 
-    return object_list('session_id.html', query, cfg=cfg, session=session,
+    cat = get_cat_with_url(session.cat_url)
+    return object_list('session_id.html', query, cat=cat, cfg=cfg, session=session,
                        sort_by=sort_by, order=order, display=display)
 
 
