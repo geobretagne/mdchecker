@@ -64,7 +64,20 @@
 
 
 {% block content %}
+
     <form class="form-horizontal" method="GET" action=".">
+
+        <!-- catalogue -->
+        <div class="form-group">
+            <label for="cat" class="col-sm-2 control-label">catalogue</label>
+            <div class="col-sm-4">
+                <select name="cat" class="form-control">
+                    {%for cat in cfg.cats %}
+                    <option value="{{cat.name}}">{{cat.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
 
         <!-- org -->
         <div class="form-group">
@@ -146,8 +159,9 @@
 
 
     <!-- query params -->
+    {% if metas|length > 0 %}
     <p>
-        catalogue : {{cfg.cswurl}} |
+        catalogue : {{args.cswurl}} |
         {% if count.returned>0 %}
             {% if args.anytext %}anytext : {{args.anytext}} | {% endif %}
             {%if args.id %}id : {{args.id}} | {% endif %}
@@ -159,7 +173,6 @@
     </p>
 
     <!-- pagination -->
-    {% if metas|length > 0 %}
     <ul class="pagination pagination-sm">
         {%for p in pages %}
             {% set a = p[0]*args.maxharvest %}

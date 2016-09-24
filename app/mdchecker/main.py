@@ -32,14 +32,18 @@ logging.basicConfig(level=logging.INFO)
 
 
 # default configuration
-# if you want to change this, copy server.cfg.DIST into server.cfg for werkzeug config
 # and app.json.DIST into app.json for app config
 #
 cfg = {
     'proxy': '',
-    'cswurl':        'http://geobretagne.fr/geonetwork/srv/fre/csw',
-    'xmlurlprefix':  'http://geobretagne.fr/geonetwork/srv/fre/xml_iso19139?uuid=',
-    'viewurlprefix': 'http://geobretagne.fr/geonetwork/apps/georchestra/?uuid=',
+    "cats": [
+        {
+            "name": u"GéoBretagne",
+            "cswurl": "http://geobretagne.fr/geonetwork/srv/fre/csw",
+            "xmlurlprefix": "http://geobretagne.fr/geonetwork/srv/fre/xml_iso19139?uuid=",
+            "viewurlprefix": "http://geobretagne.fr/geonetwork/apps/georchestra/?uuid="
+        }
+    ],
 
     'maxrecords':    20,
     'maxharvest':    250,
@@ -67,14 +71,15 @@ et_merite_votre_attention"""
 }
 
 # loads app file configuration, dumps a fresh one if missing
-appfile = 'mdchecker/conf/app.json'
+appfile = os.path.join(os.path.dirname(__file__), 'conf', 'app.json')
 try:
     if not(os.path.isfile(appfile)):
         f = open(appfile, 'w')
         json.dump(cfg, f, indent=True)
         f.close()
     cfg.update(json.load(open(appfile)))
-except:
+except Exception as e:
+    app.logger.error(e)
     app.logger.error(u'cant read or write %s, using defaults' % appfile)
 
 # import plugins
@@ -133,6 +138,24 @@ def getMdUnitTestsAsDict():
     return dict(zip(unit_tests_names, unit_tests))
 
 
+def getCatWithName(cat_name):
+    """
+    Returns the catalogue dictionary discribued in cfg with the given name
+
+    @param cat_name:    Name of the catalogue
+    @return:            dict describing the catalogue
+    """
+
+    the_cat = None
+
+    for cat in cfg["cats"]:
+        if cat["name"] == cat_name:
+            the_cat = cat
+            break
+
+    return the_cat
+
+
 def getArgsFromQuery(request):
     """
     parses and validates query arguments
@@ -160,13 +183,14 @@ def getArgsFromQuery(request):
         args['maxharvest'] = min(int(request.args.get(
             'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
 
+        args['cswurl'] = getCatWithName(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
+
     elif request.path == "/new_session/creation/":
 
         args['maxharvest'] = min(int(request.args.get(
             'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
 
-        # missing validation
-        args['cswurl'] = request.args.get('cswurl', cfg["cswurl"])
+        args['cswurl'] = getCatWithName(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
 
     return args
 
@@ -179,6 +203,7 @@ def doWeNeedToProcessRequest(request):
 class InspirobotWrapper(object):
 
     def __init__(self, test_params, unit_tests):
+
         self.md_records = None
         self.metadatas = None
         self.test_params = test_params
@@ -216,13 +241,13 @@ class InspirobotWrapper(object):
 
         # get match count
         count = self.inspirobot.mdcount(
-            cfg['cswurl'], constraints=self.constraints_fes,
+            self.test_params["cswurl"], constraints=self.constraints_fes,
             startrecord=self.test_params['nextrecord'],
             maxharvest=self.test_params['maxharvest'])
 
         # get metadatas
         self.md_records = self.inspirobot.mdsearch(
-            cfg['cswurl'],
+            self.test_params["cswurl"],
             esn='full',
             constraints=self.constraints_fes,
             startrecord=self.test_params['nextrecord'],
@@ -255,7 +280,7 @@ class InspirobotWrapper(object):
 
         # get match count
         count = self.inspirobot.mdcount(
-            self.test_params['cswurl'],
+            self.test_params["cswurl"],
             constraints=self.constraints_fes,
             startrecord=0,
             maxharvest=1)
@@ -279,7 +304,7 @@ class InspirobotWrapper(object):
 
         # get metadata records
         self.md_records = self.inspirobot.mdsearch(
-            self.test_params['cswurl'],
+            self.test_params["cswurl"],
             esn='full',
             constraints=self.constraints_fes,
             startrecord=0,
@@ -299,7 +324,7 @@ class InspirobotWrapper(object):
         if store_in_db:
             # Test session db record
             ts = TestSession(
-                cat_url=self.test_params['cswurl'],
+                cat_url=self.test_params["cswurl"],
                 filter=self.constraints_str,
                 date=datetime.datetime.utcnow()
             )
@@ -315,17 +340,17 @@ class InspirobotWrapper(object):
                 # resource metadata db record
                 # look for an existing metadata with the same cat_url and file_id
                 md = ResourceMd.query.filter_by(
-                    cat_url=self.test_params['cswurl'],
+                    cat_url=self.test_params["cswurl"],
                     file_id=meta.fileIdentifier
                 ).first()
                 if md is None and meta.MD_Identifier.strip() != "":
                     md = ResourceMd.query.filter_by(
-                        cat_url=self.test_params['cswurl'],
+                        cat_url=self.test_params["cswurl"],
                         res_uri=meta.MD_Identifier
                     ).first()
                 if md is None:
                     md = ResourceMd(
-                        cat_url=self.test_params['cswurl'],
+                        cat_url=self.test_params["cswurl"],
                         file_id=meta.fileIdentifier,
                         md_date=meta.md_date,
                         res_date=meta.date,
@@ -406,7 +431,7 @@ def byId(md_id='', format='html'):
             for n in range(1+count['matches'] // args['maxharvest'])
         ]
         return render_template(
-            'inspirobot.html', cfg=cfg, args=args, score=score,
+            'quick_test.html', cfg=cfg, args=args, score=score,
             metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
 
 
@@ -462,7 +487,7 @@ def quick_test():
         ]
 
         return render_template(
-            'inspirobot.html', cfg=cfg, args=args, score=score,
+            'quick_test.html', cfg=cfg, args=args, score=score,
             metas=metadatas, count=count, pages=pageUrls)
 
 

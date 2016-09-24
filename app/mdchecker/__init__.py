@@ -15,7 +15,7 @@ app.config.update(dict(
 ))
 
 # TODO:
-#app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+# app.config.from_envvar('MDCHECKER_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
 
