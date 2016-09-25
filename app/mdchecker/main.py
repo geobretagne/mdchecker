@@ -491,7 +491,7 @@ def new_session_creation():
 @app.route("/sessions/")
 def session_list():
 
-    sessions = TestSession.query
+    sessions = TestSession.query.order_by(TestSession.date.desc())
     return object_list('session_list.html', sessions, cfg=cfg)
 
 

@@ -58,6 +58,23 @@ class TestSession(db.Model):
         nb_md = self.md_reports.filter(MdReport.score < 20).count()
         return nb_md*100/total_md
 
+    def get_filter_as_dict(self):
+        """
+        Get a dictionary containing the content of the self.filter string
+        Only not None and not empty strings are put in the dictionary
+
+        @return:    a dictionary
+        """
+        filter_items = self.filter.split("&")
+        filter_items = [filter_item.strip() for filter_item in filter_items if len(filter_item.strip()) != 0]
+
+        dict = {}
+        for filter_item in filter_items:
+            key, value = filter_item.split("=")
+
+            if key and key.strip() and value and value.strip():
+                dict[key.strip()] = value.strip()
+        return dict
 
 class MdReport(db.Model):
     """MdReport represents a test report run on 1 resource metadata

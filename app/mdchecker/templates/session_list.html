@@ -22,16 +22,19 @@
                     <tr>
                         <th>Id</th>
                         <th>Catalogue</th>
-                        <th>Filtre</th>
+                        <th>Filtre - organisme</th>
+                        <th>Filtre - texte libre</th>
                         <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for session in sessions %}
+                    {% set filter_dict = session.get_filter_as_dict() %}
                     <tr>
                         <td><a href="{{ url_for('session_by_id', id=session.id) }}" class='clickable-row'>{{ session.id }}</a></td>
                         <td>{{ session.cat_url }}</td>
-                        <td>{{ session.filter|default('', true) }}</td>
+                        <td>{{ filter_dict['OrganisationName']|default('', true) }}</td>
+                        <td>{{ filter_dict['anytext']|default('', true) }}</td>
                         <td>{{ session.date }}</td>
                     </tr>
                     {% endfor %}
