@@ -497,15 +497,18 @@ def quick_test():
                 writer.writerow( (md.score, md.date, md.md_date, u(md.OrganisationName), u(md.title), cfg["viewurlprefix"]+md.fileIdentifier, cfg["xmlurlprefix"]+md.fileIdentifier) )
             return Response(output.getvalue(), mimetype='text/csv')
     else:
+        cat = get_cat_with_url(args["cswurl"])
+
         # paging for html
         pageUrls = [(n, getPermalink({
+            'cat': cat["name"],
             'OrganisationName': args['OrganisationName'],
+            'anytext': args['anytext'],
             'nextrecord':n*args['maxharvest'],
             'maxharvest':args['maxharvest']}))
             for n in range(1+count['matches'] // args['maxharvest'])
         ]
 
-        cat = get_cat_with_url(args["cswurl"])
         return render_template(
             'quick_test.html', cfg=cfg, cat=cat, args=args, score=score,
             metas=metadatas, count=count, pages=pageUrls)
