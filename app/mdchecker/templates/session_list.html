@@ -33,7 +33,7 @@
                         {% set cat = cfg.cats|selectattr("cswurl", "equalto", session.cat_url)|first %}
                     <tr>
                         <td><a href="{{ url_for('session_by_id', id=session.id) }}" class='clickable-row'>{{ session.id }}</a></td>
-                        <td>{{ cat.name }}</small></td>
+                        <td>{% if cat|length > 0 %} {{ cat.name }} {% else %} <small>{{session.cat_url}}</small> {% endif %}</td>
                         <td>{{ filter_dict['OrganisationName']|default('', true) }}</td>
                         <td>{{ filter_dict['anytext']|default('', true) }}</td>
                         <td>{{ session.date }}</td>
