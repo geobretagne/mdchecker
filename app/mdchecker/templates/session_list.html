@@ -29,10 +29,11 @@
                 </thead>
                 <tbody>
                     {% for session in sessions %}
-                    {% set filter_dict = session.get_filter_as_dict() %}
+                        {% set filter_dict = session.get_filter_as_dict() %}
+                        {% set cat = cfg.cats|selectattr("cswurl", "equalto", session.cat_url)|first %}
                     <tr>
                         <td><a href="{{ url_for('session_by_id', id=session.id) }}" class='clickable-row'>{{ session.id }}</a></td>
-                        <td>{{ session.cat_url }}</td>
+                        <td>{{ cat.name }}</small></td>
                         <td>{{ filter_dict['OrganisationName']|default('', true) }}</td>
                         <td>{{ filter_dict['anytext']|default('', true) }}</td>
                         <td>{{ session.date }}</td>
