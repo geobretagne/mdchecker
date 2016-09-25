@@ -112,7 +112,8 @@
                     <div class="md-score">
                         <a href="/md/{{md.file_id}}/html" class="md-retest badge">{{report.score}}</a>
                     </div>
-                    {{md.res_title}}
+                    <a class="md-bt" href="{{cat.viewurlprefix}}{{md.file_id}}" target="_blank" title="view html">{{md.res_title}}</a>
+                    <a class="md-bt" href="{{cat.xmlurlprefix}}{{md.file_id}}" target="_blank" title="view xml">xml</a>
                     {% if md.res_date %}<span class="md-date">({{md.res_date}})</span>{% endif %}
                 </div>
                 <div class="panel-body">
@@ -120,9 +121,6 @@
                     <p class="md-contact">
                         {{md.res_organisation_name}}
                     </p>
-
-                    <!-- resource description -->
-                    <p class="md-title" title="{{md.res_abstract}}">{{md.title}}</p>
                     <!-- tests -->
                     <p class="md-test">
                         {% for t in report.unit_test_results:%}

@@ -11,22 +11,19 @@
 
 {% block content %}
 
-    <h2>Nouvelle session</small></h2>
+    <h2><small>Nouvelle session</small></h2>
 
     <form class="form-horizontal" method="GET" action="/new_session/creation/">
-        <!-- org -->
+
+        <!-- catalogue -->
         <div class="form-group">
-            <label for="cswurl" class="col-sm-3 control-label">Adresse du service CSW</label>
+            <label for="cat" class="col-sm-3 control-label">Catalogue</label>
             <div class="col-sm-5">
-                <input type="text"
-                    name="cswurl"
-                    class="form-control"
-                    type="url"
-                    value="{{cfg['cswurl']}}"
-                    placeholder="adresse du service web CSW à interroger"/>
-                <small class="text-muted">Si vous ne saisissez aucune valeur, le catalogue par défaut indiqué dans la
-                    configuration de MDChecker sera utilisé.
-                </small>
+                <select name="cat" class="form-control">
+                    {%for cat in cfg.cats %}
+                    <option value="{{cat.name}}">{{cat.name}}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
 
