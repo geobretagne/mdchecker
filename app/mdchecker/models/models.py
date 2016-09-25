@@ -41,9 +41,6 @@ class TestSession(db.Model):
     def get_nb_md_tested(self):
         return self.md_reports.count()
 
-    def get_nb_test_types(self):
-        return self.md_reports.join(UnitTestResult).with_entities("test_name").distinct().count()
-
     def get_average_md_score(self):
         return self.md_reports.with_entities(func.avg(MdReport.score).label('average_score')).first()[0]
 
