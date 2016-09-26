@@ -7,6 +7,7 @@
     }
 
 {% include "include_md_cards_css.html" %}
+{% include "include_common_css.html" %}
 
 </style>
 {% endblock %}
@@ -23,25 +24,53 @@
                 trigger: "hover focus"}
             );
         });
+
+        $(document).on('click', '.panel-heading span.clickable', function(e){
+            var $this = $(this);
+            if(!$this.hasClass('panel-collapsed')) {
+                $this.parents('.panel').find('.panel-body').slideUp();
+                $this.addClass('panel-collapsed');
+                $this.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+            } else {
+                $this.parents('.panel').find('.panel-body').slideDown();
+                $this.removeClass('panel-collapsed');
+                $this.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+            }
+        })
     </script>
 {% endblock %}
 
 {% block content %}
+    {% set filter_dict = session.get_filter_as_dict() %}
+
     <div class="panel panel-default">
-        <div class="panel-heading">Session {{ session.id }}</div>
-        <div class="panel-body">
-            <table class="table table-condensed">
-                <tbody>
-                    <tr><td>Identifiant de la session de test</td><td>{{ session.id }}</td></tr>
-                    <tr><td>Catalogue analysé</td><td>{{ session.cat_url }}</td></tr>
-                    <tr><td>Date/heure de la session</td><td>{{ session.date }}</td></tr>
-                    <tr><td>Filtre appliqué sur le catalogue</td><td>{{ session.filter }}</td></tr>
-                    <tr><td>Nombre total de métadonnées testées</td><td>{{ session.get_nb_md_tested() }}</td></tr>
-                    <tr><td>Score moyen par métadonnées</td><td>{{ session.get_average_md_score() }}</td></tr>
-                    <tr><td>Pourcentage de métadonnées avec un score > 80</td><td>{{ session.get_percentage_md_upper_than_80() }} %</td></tr>
-                    <tr><td>Pourcentage de métadonnées avec un score < 20</td><td>{{ session.get_percentage_md_lower_than_20() }} %</td></tr>
-                </tbody>
-            </table>
+        <div class="panel-heading">
+            {{cat.name}} <small>- Session #{{ session.id }}</small>
+            <span class="pull-right clickable panel-collapsed"><i class="glyphicon glyphicon-chevron-down"></i></span>
+        </div>
+        <div class="panel-body small collapse">
+            <div class="row">
+                <div class="col-sm-6">
+                    <table class="table">
+                        <tbody>
+                            <tr><td>URL du catalogue analysé</td><td>{{cat.cswurl}}</td></tr>
+                            <tr><td>Date/heure de la session</td><td>{{ session.date.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+                            <tr><td>Filtre - organisme</td><td>{{ filter_dict['OrganisationName']|default('', true) }}</td></tr>
+                            <tr><td>Filtre - texte libre</td><td>{{ filter_dict['anytext']|default('', true) }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm-6">
+                    <table class="table">
+                        <tbody>
+                            <tr><td>Nombre total de métadonnées testées</td><td>{{ session.get_nb_md_tested() }}</td></tr>
+                            <tr><td>Score moyen par métadonnées</td><td>{{ '%0.2f' % session.get_average_md_score()|float }}</td></tr>
+                            <tr><td>Pourcentage de métadonnées avec un score > 80</td><td>{{ session.get_percentage_md_upper_than_80() }} %</td></tr>
+                            <tr><td>Pourcentage de métadonnées avec un score < 20</td><td>{{ session.get_percentage_md_lower_than_20() }} %</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -101,6 +130,7 @@
     {% if reports|length < 1 %}
     <p>Aucun résultat de test n'est présent en base de données pour cette session</p>
     {% else %}
+        {% include "include_page_links.html" %}
         {% if display|default("cards", true) == "cards" %}
 
     <div class="row">
@@ -152,7 +182,6 @@
 
     {% endfor %}
     </div>
-    {% include "include_page_links.html" %}
 
         {% elif display=="list" %}
 
@@ -197,8 +226,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-
-            {% include "include_page_links.html" %}
 
         </div>
     </div>
