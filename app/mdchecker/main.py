@@ -555,6 +555,7 @@ def session_by_id(id=None):
 
     sort_by = "score"
 
+    page = request.args.get('page')
     display = request.args.get('display')
     request_sort_by = request.args.get('sort_by')
     if request_sort_by:
@@ -600,7 +601,7 @@ def session_by_id(id=None):
 
     cat = get_cat_with_url(session.cat_url)
     return object_list('session_id.html', query, cat=cat, cfg=cfg, session=session,
-                       sort_by=sort_by, order=order, display=display)
+                       sort_by=sort_by, order=order, display=display, page=page)
 
 
 @app.route("/test_description/")

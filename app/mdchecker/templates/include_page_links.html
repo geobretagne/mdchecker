@@ -15,7 +15,11 @@
                 {% if page == object_list.page %}
                     <a href="#">{{ page }}<span class="sr-only">(current)</span></a>
                 {% else %}
+                    {% if display %}
+                    <a href="./?page={{ page }}&sort_by={{sort_by}}&order={{order}}&display={{display}}">{{ page }}</a>
+                    {% else %}
                     <a href="./?page={{ page }}&sort_by={{sort_by}}&order={{order}}">{{ page }}</a>
+                    {% endif %}
                 {% endif %}
             {% else %}
                 <a class="disabled">...</a>

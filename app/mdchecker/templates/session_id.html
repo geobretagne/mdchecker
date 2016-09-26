@@ -71,6 +71,7 @@
             </div>
         </div>
 
+        <!-- display mode (list or cards) -->
         <div class="form-group form-group-sm">
             <label for="display" class="col-sm-2 control-label">Mode d'affichage</label>
             <div class="col-sm-4">
@@ -78,6 +79,18 @@
                     <option value="cards" {% if display == "cards" %}selected{% endif %}>Cartes</option>
                     <option value="list" {% if display == "list" %}selected{% endif %}>Liste</option>
                 </select>
+            </div>
+        </div>
+
+        <!-- hidden field to store the page number -->
+        <div class="form-group form-group-sm hidden">
+            <label for="page" class="col-sm-2 control-label">Mode d'affichage</label>
+            <div class="col-sm-4">
+                <input type="text"
+                    name="page"
+                    class="form-control"
+                    placeholder="si vous voyez ce texte ce n'est pas normal"
+                    value='{{page}}' />
             </div>
         </div>
 
