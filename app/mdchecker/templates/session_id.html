@@ -25,7 +25,7 @@
             );
         });
 
-        $(document).on('click', '.panel-heading span.clickable', function(e){
+        $(document).on('click', '.panel-heading.clickable', function(e){
             var $this = $(this);
             if(!$this.hasClass('panel-collapsed')) {
                 $this.parents('.panel').find('.panel-body').slideUp();
@@ -44,9 +44,9 @@
     {% set filter_dict = session.get_filter_as_dict() %}
 
     <div class="panel panel-default">
-        <div class="panel-heading">
+        <div class="panel-heading clickable panel-collapsed">
             {{cat.name}} <small>- Session #{{ session.id }}</small>
-            <span class="pull-right clickable panel-collapsed"><i class="glyphicon glyphicon-chevron-down"></i></span>
+            <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
         </div>
         <div class="panel-body small collapse">
             <div class="row">

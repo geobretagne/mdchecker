@@ -2,13 +2,6 @@
 
 {% block extra_styles %}
 <style rel="stylesheet" type="text/css">
-    .clickable-row {
-        content: "";
-        display: inline-block;
-        position: absolute;
-        width: 100%;
-    }
-
     .table {
         table-layout: fixed;
         width: 100%;
@@ -16,71 +9,87 @@
     td {
         word-wrap: break-word;
     }
+
     .first_col {
         width: 8em;
     }
+
+{% include "include_common_css.html" %}
 </style>
 {% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        $(document).on('click', '.panel-heading.clickable', function(e){
+            var $this = $(this);
+            if(!$this.hasClass('panel-collapsed')) {
+                $this.parents('.panel').find('.panel-body').slideUp();
+                $this.addClass('panel-collapsed');
+                $this.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+            } else {
+                $this.parents('.panel').find('.panel-body').slideDown();
+                $this.removeClass('panel-collapsed');
+                $this.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+            }
+        })
+    </script>
+{% endblock %}
+
 
 {% block content %}
 
     <h2>Description des tests unitaires</h2>
 
     {% for ut in tests %}
-    <div class="panel panel-default small">
-        <div class="panel-heading"
-             data-toggle="collapse" data-target="#collapse-{{ut.name}}"
-             aria-expanded="false" aria-controls="collapse-{{ut.name}}">
-            <h4>{{ut.name}}&nbsp: <small>{{ut.abstract}}</small></h4>
+    <div class="panel panel-default">
+        <div class="panel-heading clickable panel-collapsed">
+            {{ut.name}}&nbsp: <small>{{ut.abstract}}</small>
+            <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
         </div>
-        <div class="panel-collapse collapse" id="collapse-{{ut.name}}">
-
-            <div class="panel-body">
-                <table class="table">
-                    {% if ut.xpath.items()|length > 0 %}
-                    <tr>
-                        <td class="first_col">Chemins</td>
-                        <td>
-                            <ul>
-                            {% for key, value in ut.xpath.items() %}
-                                <li>{{key}} : {{value}}</li>
-                            {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
-                    {% endif %}
-                    {% if ut.re.items()|length > 0 %}
-                    <tr>
-                        <td class="first_col">Expressions</td>
-                        <td>
-                            <ul>
-                            {% for key, value in ut.re.items() %}
-                                <li>{{key}} : {{value}}</li>
-                            {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
-                    {% endif %}
-                    {% if ut.values.items()|length > 0 %}
-                    <tr>
-                        <td class="first_col">Valeurs</td>
-                        <td>
-                            <ul>
-                            {% for key, valuelist in ut.values.items() %}
-                                <li>
-                                    {{key}} :
-                                        {% for value in valuelist %}
-                                        {{value}},
-                                        {% endfor %}
-                                </li>
-                            {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
-                    {% endif %}
-                </table>
-
-            </div>
+        <div class="panel-body small collapse">
+            <table class="table">
+                {% if ut.xpath.items()|length > 0 %}
+                <tr>
+                    <td class="first_col">Chemins</td>
+                    <td>
+                        <ul>
+                        {% for key, value in ut.xpath.items() %}
+                            <li>{{key}} : {{value}}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if ut.re.items()|length > 0 %}
+                <tr>
+                    <td class="first_col">Expressions</td>
+                    <td>
+                        <ul>
+                        {% for key, value in ut.re.items() %}
+                            <li>{{key}} : {{value}}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+                {% if ut.values.items()|length > 0 %}
+                <tr>
+                    <td class="first_col">Valeurs</td>
+                    <td>
+                        <ul>
+                        {% for key, valuelist in ut.values.items() %}
+                            <li>
+                                {{key}} :
+                                    {% for value in valuelist %}
+                                    {{value}},
+                                    {% endfor %}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endif %}
+            </table>
         </div>
     </div>
     {% endfor %}
