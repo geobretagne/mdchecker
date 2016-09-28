@@ -478,6 +478,10 @@ def quick_test():
 
     # querystring parser
     args.update(getArgsFromQuery(request))
+    
+    # bulk export
+    if args['format'] in ['json', 'csv']:
+        args['maxharvest'] = cfg['maxmaxharvest']
 
     if doWeNeedToProcessRequest(request):
         ins_wrapper = InspirobotWrapper(args, mdUnitTests)
@@ -489,12 +493,13 @@ def quick_test():
             score=score,
             metadatas=[md.asDict() for md in metadatas]
         )
-    if args['format'] == 'csv':
+    elif args['format'] == 'csv':
+            cat = get_cat_with_url(args["cswurl"])
             output = io.BytesIO()
             writer = csv.writer(output, dialect=csv.excel)
             writer.writerow( ('score', 'date', 'md_date', 'organisation', 'title','html', 'xml') )
             for md in metadatas:
-                writer.writerow( (md.score, md.date, md.md_date, u(md.OrganisationName), u(md.title), cfg["viewurlprefix"]+md.fileIdentifier, cfg["xmlurlprefix"]+md.fileIdentifier) )
+                writer.writerow( (md.score, md.date, md.md_date, u(md.OrganisationName), u(md.title), cat["viewurlprefix"]+md.fileIdentifier, cat["xmlurlprefix"]+md.fileIdentifier) )
             return Response(output.getvalue(), mimetype='text/csv')
     else:
         cat = get_cat_with_url(args["cswurl"])
