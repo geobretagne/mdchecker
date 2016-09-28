@@ -47,6 +47,14 @@ You can bind the embedded server to a specific interface using
 python runserver.py --host 192.168.0.1 --port 4444
 ```
 
+You can activate debug mode (stacktrace output) using
+
+```
+python runserver.py --debug
+```
+
+Do not use in production !
+
 After first launch :
 
 * if etc/app.json is not present, it will be created with application default values. Edit this file to set application according to your needs
