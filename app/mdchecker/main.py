@@ -317,6 +317,8 @@ class InspirobotWrapper(object):
             max_harvest = count["matches"]
         elif self.test_params["maxharvest"] < 1:
             max_harvest = cfg["maxharvest"]
+        else:
+            max_harvest = self.test_params["maxharvest"]
 
         if count['matches'] == 0:
             max_harvest = 1
