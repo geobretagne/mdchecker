@@ -65,12 +65,14 @@
 
 {% block content %}
 
+    <h2><small>Test rapide</small></h2>
+
     <form class="form-horizontal" method="GET" action=".">
 
         <!-- catalogue -->
         <div class="form-group">
-            <label for="cat" class="col-sm-2 control-label">catalogue</label>
-            <div class="col-sm-4">
+            <label for="cat" class="col-sm-3 control-label">Catalogue</label>
+            <div class="col-sm-5">
                 <select name="cat" class="form-control">
                     {%for c in cfg.cats %}
                     <option value="{{c.name}}" {% if cat.cswurl == c.cswurl %}selected{% endif %}>{{c.name}}</option>
@@ -81,8 +83,8 @@
 
         <!-- org -->
         <div class="form-group">
-            <label for="OrganisationName" class="col-sm-2 control-label">organisation</label>
-            <div class="col-sm-4">
+            <label for="OrganisationName" class="col-sm-3 control-label">Nom d'organime</label>
+            <div class="col-sm-5">
                 <input type="text"
                     name="OrganisationName"
                     class="form-control"
@@ -93,8 +95,8 @@
 
         <!-- anytext -->
         <div class="form-group">
-            <label for="anytext" class="col-sm-2 control-label">texte</label>
-            <div class="col-sm-4">
+            <label for="anytext" class="col-sm-3 control-label">Texte libre</label>
+            <div class="col-sm-5">
                 <input type="text"
                     name="anytext"
                     class="form-control"
@@ -105,8 +107,8 @@
 
         <!-- sortby -->
         <div class="form-group">
-            <label for="sortby" class="col-sm-2 control-label">tri&eacute; par</label>
-            <div class="col-sm-4">
+            <label for="sortby" class="col-sm-3 control-label">Tri&eacute; par</label>
+            <div class="col-sm-5">
                 <select name="sortby" class="form-control">
                     <option value="id" {% if args.sortby == "id" %}selected{% endif %}>id</option>
                     <option value="score" {% if args.sortby == "score" %}selected{% endif %}>score</option>
@@ -118,8 +120,8 @@
 
         <!-- quantity -->
         <div class="form-group">
-            <label for="maxharvest" class="col-sm-2 control-label">résultats par page</label>
-            <div class="col-sm-4">
+            <label for="maxharvest" class="col-sm-3 control-label">Résultats par page</label>
+            <div class="col-sm-5">
                 <div class="input-group">
                     <select name="maxharvest" class="form-control">
                         <option value="5" {% if args.maxharvest == 5 %}selected{% endif %}>5</option>
@@ -134,8 +136,8 @@
 
         <!-- format -->
         <div class="form-group">
-            <label for="format" class="col-sm-2 control-label">format</label>
-            <div class="col-sm-4">
+            <label for="format" class="col-sm-3 control-label">Format</label>
+            <div class="col-sm-5">
                 <div class="input-group">
                     <select name="format" class="form-control">
                         <option value="html" {% if args.format == "html" %}selected{% endif %}>html</option>
@@ -148,7 +150,8 @@
 
         <!-- submit -->
         <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-3>
+            <!--div class="col-sm-6 pull-right"-->
+            <div class="col-sm-offset-7">
                 <div class="input-group">
                     <button type="submit" class="btn btn-default">Analyser</button>
                 </div>
