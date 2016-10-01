@@ -77,6 +77,31 @@ class TestSession(db.Model):
                 dict[key.strip()] = value.strip()
         return dict
 
+    def get_previous_session(self):
+
+        query = TestSession.query
+        query = query.filter(TestSession.cat_url == self.cat_url)
+        query = query.filter(TestSession.filter == self.filter)
+        query = query.filter(TestSession.date < self.date)
+        query = query.order_by(TestSession.date.desc())
+
+        prev_session = query.first()
+
+        return prev_session
+
+    def get_next_session(self):
+
+        query = TestSession.query
+        query = query.filter(TestSession.cat_url == self.cat_url)
+        query = query.filter(TestSession.filter == self.filter)
+        query = query.filter(TestSession.date > self.date)
+        query = query.order_by(TestSession.date.asc())
+
+        next_session = query.first()
+
+        return next_session
+
+
 class MdReport(db.Model):
     """MdReport represents a test report run on 1 resource metadata
     1 MdReport instance is linked to 1 TestSession instance and 1 ResourceMd instance

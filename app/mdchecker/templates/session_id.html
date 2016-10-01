@@ -159,18 +159,36 @@
                         <i class="glyphicon glyphicon-repeat"></i> Créer une nouvelle session identique
                     </a>
                 </li>
-                <!--li role="separator" class="divider"></li>
+                <li role="separator" class="divider"></li>
+                {% set prev_session = session.get_previous_session() %}
+                {% if prev_session %}
                 <li>
+                    <a href="{{ url_for('session_by_id', id=prev_session.id) }}">
+                        <i class="glyphicon glyphicon-chevron-left"></i> Aller à la session identique précédente
+                    </a>
+                </li>
+                {% else %}
+                <li class="disabled">
                     <a href="#">
                         <i class="glyphicon glyphicon-chevron-left"></i> Aller à la session identique précédente
                     </a>
                 </li>
+                {% endif %}
+                {% set next_session = session.get_next_session() %}
+                {% if next_session %}
                 <li>
+                    <a href="{{ url_for('session_by_id', id=next_session.id) }}">
+                        <i class="glyphicon glyphicon-chevron-right"></i> Aller à la session identique suivante
+                    </a>
+                </li>
+                {% else %}
+                <li class="disabled">
                     <a href="#">
                         <i class="glyphicon glyphicon-chevron-right"></i> Aller à la session identique suivante
                     </a>
                 </li>
-                <li role="separator" class="divider"></li>
+                {% endif %}
+                <!--li role="separator" class="divider"></li>
                 <li>
                     <a href="#">
                         <i class="glyphicon glyphicon-remove"></i> Supprimer cette session
