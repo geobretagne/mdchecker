@@ -31,6 +31,7 @@ class TestSession(db.Model):
     cat_url = db.Column(db.String(512))
     filter = db.Column(db.String(1024))
     date = db.Column(db.DateTime)
+    max_harvest = db.Column(db.Integer)
 
     def __init__(self, *args, **kwargs):
         super(TestSession, self).__init__(*args, **kwargs)

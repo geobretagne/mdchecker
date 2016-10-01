@@ -304,21 +304,22 @@ class InspirobotWrapper(object):
             maxharvest=1)
 
         # update maxharvest
+        max_harvest = None
         if not ('maxharvest' in self.test_params and isinstance(self.test_params["maxharvest"], (int, long))):
             if isinstance(self.test_params["maxharvest"], (str, unicode)) and \
                     self.test_params["maxharvest"].strip().lower() == 'all':
-                self.test_params["maxharvest"] = count["matches"]
+                max_harvest = count["matches"]
             else:
-                self.test_params["maxharvest"] = cfg["maxharvest"]
+                max_harvest = cfg["maxharvest"]
         elif self.test_params["maxharvest"] > count["matches"]:
-            self.test_params["maxharvest"] = count["matches"]
+            max_harvest = count["matches"]
         elif self.test_params["maxharvest"] == -1:
-            self.test_params["maxharvest"] = count["matches"]
+            max_harvest = count["matches"]
         elif self.test_params["maxharvest"] < 1:
-            self.test_params["maxharvest"] = cfg["maxharvest"]
+            max_harvest = cfg["maxharvest"]
 
         if count['matches'] == 0:
-            self.test_params["maxharvest"] = 1
+            max_harvest = 1
 
         # get metadata records
         self.md_records = self.inspirobot.mdsearch(
@@ -327,7 +328,7 @@ class InspirobotWrapper(object):
             constraints=self.constraints_fes,
             startrecord=0,
             maxrecords=cfg['maxrecords'],
-            maxharvest=self.test_params['maxharvest']
+            maxharvest=max_harvest
         )
 
         new_session_id = self.run_tests_on_md_records(True)
@@ -344,7 +345,8 @@ class InspirobotWrapper(object):
             ts = TestSession(
                 cat_url=self.test_params["cswurl"],
                 filter=self.constraints_str,
-                date=datetime.datetime.utcnow()
+                date=datetime.datetime.utcnow(),
+                max_harvest=self.test_params["maxharvest"]
             )
             self.db.session.add(ts)
 

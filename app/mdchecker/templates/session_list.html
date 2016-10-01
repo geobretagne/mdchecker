@@ -24,6 +24,7 @@
                         <th>Catalogue</th>
                         <th>Filtre - organisme</th>
                         <th>Filtre - texte libre</th>
+                        <th>Nb fiches max</th>
                         <th>Date</th>
                     </tr>
                 </thead>
@@ -36,6 +37,7 @@
                         <td>{% if cat|length > 0 %} {{ cat.name }} {% else %} <small>{{session.cat_url}}</small> {% endif %}</td>
                         <td>{{ filter_dict['OrganisationName']|default('', true) }}</td>
                         <td>{{ filter_dict['anytext']|default('', true) }}</td>
+                        <td>{{ session.max_harvest }}</td>
                         <td>{{ session.date }}</td>
                     </tr>
                     {% endfor %}

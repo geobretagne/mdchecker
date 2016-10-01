@@ -42,6 +42,8 @@
 
 {% block content %}
     {% set filter_dict = session.get_filter_as_dict() %}
+    {% set filter_organisation_name = filter_dict['OrganisationName'] %}
+    {% set filter_any_text = filter_dict['anytext'] %}
 
     <div class="panel panel-default">
         <div class="panel-heading clickable panel-collapsed">
@@ -55,8 +57,10 @@
                         <tbody>
                             <tr><td>URL du catalogue analysé</td><td>{{cat.cswurl}}</td></tr>
                             <tr><td>Date/heure de la session</td><td>{{ session.date.strftime('%Y-%m-%d %H:%M') }}</td></tr>
-                            <tr><td>Filtre - organisme</td><td>{{ filter_dict['OrganisationName']|default('', true) }}</td></tr>
-                            <tr><td>Filtre - texte libre</td><td>{{ filter_dict['anytext']|default('', true) }}</td></tr>
+                            <!--tr><td>Filtre - organisme</td><td>{{ filter_dict['OrganisationName']|default('', true) }}</td></tr>
+                            <tr><td>Filtre - texte libre</td><td>{{ filter_dict['anytext']|default('', true) }}</td></tr-->
+                            <tr><td>Filtre - organisme</td><td>{{ filter_organisation_name }}</td></tr>
+                            <tr><td>Filtre - texte libre</td><td>{{ filter_any_text }}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -74,56 +78,125 @@
         </div>
     </div>
 
-    <form class="form-horizontal" method="GET" action=".">
+    <div class="row">
+        <div class="col-sm-6">
+            <form class="form-horizontal" method="GET" action=".">
 
-        <!-- sortby -->
-        <div class="form-group form-group-sm">
-            <label for="sort_by" class="col-sm-2 control-label">Trier par</label>
-            <div class="col-sm-4">
-                <select name="sort_by" class="form-control" onchange="this.form.submit()">
-                    <option value="score" {% if sort_by == "score" %}selected{% endif %}>Score</option>
-                    <option value="organisation" {% if sort_by == "organisation" %}selected{% endif %}>Nom de l'organisme</option>
-                    <option value="id" {% if sort_by == "id" %}selected{% endif %}>File identifier des métadonnées</option>
-                    <option value="title" {% if sort_by == "title" %}selected{% endif %}>Titre des métadonnées</option>
-                    <option value="date" {% if sort_by == "date" %}selected{% endif %}>Date des métadonnées</option>
-                </select>
-            </div>
+                <!-- sortby -->
+                <div class="form-group form-group-sm">
+                    <label for="sort_by" class="col-sm-4 control-label">Trier par</label>
+                    <div class="col-sm-8">
+                        <select name="sort_by" class="form-control" onchange="this.form.submit()">
+                            <option value="score" {% if sort_by == "score" %}selected{% endif %}>Score</option>
+                            <option value="organisation" {% if sort_by == "organisation" %}selected{% endif %}>Nom de l'organisme</option>
+                            <option value="id" {% if sort_by == "id" %}selected{% endif %}>File identifier des métadonnées</option>
+                            <option value="title" {% if sort_by == "title" %}selected{% endif %}>Titre des métadonnées</option>
+                            <option value="date" {% if sort_by == "date" %}selected{% endif %}>Date des métadonnées</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm">
+                    <label for="order" class="col-sm-4 control-label">Ordre</label>
+                    <div class="col-sm-8">
+                        <select name="order" class="form-control" onchange="this.form.submit()">
+                            <option value="asc" {% if order == "asc" %}selected{% endif %}>Croissant</option>
+                            <option value="desc" {% if order == "desc" %}selected{% endif %}>Décroissant</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- display mode (list or cards) -->
+                <div class="form-group form-group-sm">
+                    <label for="display" class="col-sm-4 control-label">Mode d'affichage</label>
+                    <div class="col-sm-8">
+                        <select name="display" class="form-control" onchange="this.form.submit()">
+                            <option value="cards" {% if display == "cards" %}selected{% endif %}>Cartes</option>
+                            <option value="list" {% if display == "list" %}selected{% endif %}>Liste</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- hidden field to store the page number -->
+                <div class="form-group form-group-sm hidden">
+                    <label for="page" class="col-sm-4 control-label">Mode d'affichage</label>
+                    <div class="col-sm-8">
+                        <input type="text"
+                            name="page"
+                            class="form-control"
+                            placeholder="si vous voyez ce texte ce n'est pas normal"
+                            value='{{page}}' />
+                    </div>
+                </div>
+
+            </form>
         </div>
 
-        <div class="form-group form-group-sm">
-            <label for="order" class="col-sm-2 control-label">Ordre</label>
-            <div class="col-sm-4">
-                <select name="order" class="form-control" onchange="this.form.submit()">
-                    <option value="asc" {% if order == "asc" %}selected{% endif %}>Croissant</option>
-                    <option value="desc" {% if order == "desc" %}selected{% endif %}>Décroissant</option>
-                </select>
+        <div class="col-sm-6">
+            <div class="btn-group">
+              <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="glyphicon glyphicon-cog"></i> Actions <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <!--li>
+                    <a href="{{ url_for('index', id=session.id) }}">
+                        <i class="glyphicon glyphicon-save-file"></i> Produire un rapport CSV
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('index', id=session.id) }}">
+                        <i class="glyphicon glyphicon-save-file"></i> Produire un rapport JSON
+                    </a>
+                </li>
+                <li role="separator" class="divider"></li-->
+                <li>
+                    <a href="{{ url_for('quick_test', cat=cat.name, OrganisationName=filter_organisation_name, anytext=filter_any_text) }}">
+                        <i class="glyphicon glyphicon-repeat"></i> Lancer un test rapide identique
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('new_session_creation', cat=cat.name, OrganisationName=filter_organisation_name, anytext=filter_any_text, maxharvest=session.max_harvest|default(-1, True)) }}">
+                        <i class="glyphicon glyphicon-repeat"></i> Créer une nouvelle session identique
+                    </a>
+                </li>
+                <!--li role="separator" class="divider"></li>
+                <li>
+                    <a href="#">
+                        <i class="glyphicon glyphicon-chevron-left"></i> Aller à la session identique précédente
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="glyphicon glyphicon-chevron-right"></i> Aller à la session identique suivante
+                    </a>
+                </li>
+                <li role="separator" class="divider"></li>
+                <li>
+                    <a href="#">
+                        <i class="glyphicon glyphicon-remove"></i> Supprimer cette session
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="glyphicon glyphicon-remove"></i> Supprimer toutes les sessions identiques
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="glyphicon glyphicon-remove"></i> Supprimer toutes les sessions de ce catalogue
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="glyphicon glyphicon-remove"></i> Supprimer toutes les sessions
+                    </a>
+                </li-->
+              </ul>
             </div>
         </div>
+    </div>
 
-        <!-- display mode (list or cards) -->
-        <div class="form-group form-group-sm">
-            <label for="display" class="col-sm-2 control-label">Mode d'affichage</label>
-            <div class="col-sm-4">
-                <select name="display" class="form-control" onchange="this.form.submit()">
-                    <option value="cards" {% if display == "cards" %}selected{% endif %}>Cartes</option>
-                    <option value="list" {% if display == "list" %}selected{% endif %}>Liste</option>
-                </select>
-            </div>
-        </div>
 
-        <!-- hidden field to store the page number -->
-        <div class="form-group form-group-sm hidden">
-            <label for="page" class="col-sm-2 control-label">Mode d'affichage</label>
-            <div class="col-sm-4">
-                <input type="text"
-                    name="page"
-                    class="form-control"
-                    placeholder="si vous voyez ce texte ce n'est pas normal"
-                    value='{{page}}' />
-            </div>
-        </div>
-
-    </form>
 
     <!-- test results -->
     {% set reports = object_list.items %}
