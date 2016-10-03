@@ -9,6 +9,41 @@
     </style>
 {% endblock %}
 
+
+{% block extra_scripts %}
+    <script>
+        $(document).on('click', '.panel-heading.clickable', function(e){
+            var $this = $(this);
+            if(!$this.hasClass('panel-collapsed')) {
+                $this.parents('.panel').find('.panel-body').slideUp();
+                $this.addClass('panel-collapsed');
+                $this.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+            } else {
+                $this.parents('.panel').find('.panel-body').slideDown();
+                $this.removeClass('panel-collapsed');
+                $this.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+            }
+        });
+
+        $(document).ready(function() {
+            $('#orgnameinput.typeahead').typeahead({
+                minLength: 2,
+                minLength: 2,
+                source:  function (query, process) {
+                    return $.get('{{url_for('organisation_names_autocomplete')}}', { q: query }, function (data) {
+                        console.log(data);
+                        return process(data);
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+<script type="text/javascript">
+</script>
+
+
 {% block content %}
 
     <h2><small>Nouvelle session</small></h2>
@@ -38,9 +73,12 @@
             <div class="col-sm-5">
                 <input type="text"
                     name="OrganisationName"
-                    class="form-control"
+                    class="form-control typeahead"
+                    id="orgnameinput"
                     placeholder="nom de l'organisation (correspondance exacte)"/>
-                <small class="text-muted">Laissez vide ce champ pour n'opérer aucun filtre sur les noms des organismes</small>
+                <small class="text-muted">Laissez vide ce champ pour n'opérer aucun filtre sur les noms des organismes
+                <br>L'autocomplétion sur ce champ est sensible à la casse et aux accents.
+                </small>
             </div>
         </div>
 

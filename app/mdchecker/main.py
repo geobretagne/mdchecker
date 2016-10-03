@@ -23,6 +23,7 @@ from inspirobot import Inspirobot
 from mdchecker import app
 from mdchecker import db
 
+from models.models import get_organisation_names_like
 from models.models import UnitTestResult
 from models.models import ResourceMd
 from models.models import TestSession
@@ -618,6 +619,13 @@ def test_description():
     mdUnitTests = getMdUnitTests()
 
     return render_template('test_description.html', cfg=cfg, tests=mdUnitTests)
+
+
+@app.route('/organisation_names/', methods=['GET'])
+def organisation_names_autocomplete():
+    q = request.args.get('q', '')
+    results = get_organisation_names_like(q)
+    return jsonify(results)
 
 
 @app.errorhandler(404)

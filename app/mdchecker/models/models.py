@@ -2,6 +2,24 @@ from mdchecker.main import db
 from sqlalchemy import func
 
 
+def get_organisation_names_like(q):
+    query = ResourceMd.query
+    query = query.filter(ResourceMd.res_organisation_name.contains(q))
+    res_mds = query.all()
+
+    org_names = set()
+    for res_md in res_mds:
+        md_org_names = res_md.res_organisation_name.split(",")
+
+        for org_name in md_org_names:
+            if q in org_name:
+                org_names.add(org_name.strip())
+
+    results = sorted(list(org_names))
+
+    return results
+
+
 class ResourceMd(db.Model):
     """ResourceMd represents the metadata of a resource stored in a catalog
     """
