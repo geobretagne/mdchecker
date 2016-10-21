@@ -1,6 +1,6 @@
-MDChecker quick install
-===============
+# MDChecker install
 
+## By hand
 Instructions to get a working MDChecker instance, for dev & testing purpose only.
 
 Install system libraries
@@ -21,7 +21,7 @@ Install requirements and application inside venv
 
 ```
 git clone https://github.com/geobretagne/mdchecker.git mdchecker
-pip install -r mdchecker/requirements.txt
+pip install -r mdchecker/app/requirements.txt
 ```
 
 If you must get through a http proxy, use this instead
@@ -32,10 +32,21 @@ git clone https://github.com/geobretagne/mdchecker.git mdchecker
 pip install --proxy=http://addr:port/ -r mdchecker/requirements.txt
 ```
 
-Then deploy application and get into the app dir :
+You may set the following environment variables with custom values:
+- MDCHECKER_DEBUG: True or False
+- MDCHECKER_SECRET_KEY
+- MDCHECKER_DB_PATH: the path of the directory that should contain the SQLite
+database file created by the create_db.py script. The default path for the database directory is /tmp
 
+Then deploy mdchecker, get into the app dir and create the database:
 ```
 cd mdchecker/app
+python create_db.py
+```
+
+Launch mdchecker:
+
+```
 python runserver.py
 ```
 
@@ -55,10 +66,21 @@ python runserver.py --debug
 
 Do not use in production !
 
-After first launch :
+After first launch:
 
 * if etc/app.json is not present, it will be created with application default values. Edit this file to set application according to your needs
 * be sure to correctly set the proxy  in etc/app.json. If there's no proxy, set an empty string
 * copy etc/server.cfg.DIST into etc/server.cfg, see http://flask.pocoo.org/docs/0.10/config/#builtin-configuration-values
 * if mdchecker sits behind a reverse proxy, be sure to set SERVER_NAME accordingly
-* run create_db.py once to create the local database
+
+
+## Using Docker
+Clone or download the project.
+
+Build and run the containers:
+```
+cd mdchecker
+docker-compose up -d
+```
+
+Finally, open [http://localhost:8080/](http://localhost:8080/) in your browser
