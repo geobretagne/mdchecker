@@ -1,5 +1,17 @@
 # MDChecker install
 
+Requirements:
+
+- Linux
+- Python 2.7
+- the following python modules:
+  - uwsgi
+  - flask
+  -flask_sqlalchemy
+  - OWSLib
+  - lxml
+  - pyshp
+
 ## By hand
 Instructions to get a working MDChecker instance, for dev & testing purpose only.
 
