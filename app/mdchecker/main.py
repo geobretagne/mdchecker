@@ -514,9 +514,32 @@ def quick_test():
             cat = get_cat_with_url(args["cswurl"])
             output = io.BytesIO()
             writer = csv.writer(output, dialect=csv.excel)
-            writer.writerow( ('score', 'date', 'md_date', 'organisation', 'title','html', 'xml') )
+            writer.writerow(('score', 'date', 'md_date', 'organisation', 'title', 'html', 'xml', 'report'))
             for md in metadatas:
-                writer.writerow( (md.score, md.date, md.md_date, u(md.OrganisationName), u(md.title), cat["viewurlprefix"]+md.fileIdentifier, cat["xmlurlprefix"]+md.fileIdentifier) )
+                results_as_string = []
+
+                for report in md.reports:
+                    if len(report.results) > 0:
+                        test_name = report.name
+                        results = report.results
+                        for result in results:
+                            result_level = result[0]
+                            if result_level in [u"error", u"warning"]:
+                                results_as_string.append(u"{0} - {1} - {2}".format(test_name, result[0], result[1]))
+
+                report_as_string = u"\n".join(results_as_string)
+
+                values = (
+                    md.score,
+                    md.date,
+                    md.md_date,
+                    u(md.OrganisationName),
+                    u(md.title),
+                    cat["viewurlprefix"]+md.fileIdentifier,
+                    cat["xmlurlprefix"]+md.fileIdentifier,
+                    u(report_as_string)
+                )
+                writer.writerow(values)
             return Response(output.getvalue(), mimetype='text/csv')
     else:
         cat = get_cat_with_url(args["cswurl"])
