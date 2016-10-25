@@ -48,6 +48,7 @@ You may set the following environment variables with custom values:
 - MDCHECKER_DEBUG: True or False
 - MDCHECKER_SECRET_KEY
 - MDCHECKER_DB_PATH: the path of the directory that should contain the SQLite
+- http_proxy: the outgoing http proxy, if any
 database file created by the create_db.py script. The default path for the database directory is /tmp
 
 Then deploy mdchecker, get into the app dir and create the database:
