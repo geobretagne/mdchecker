@@ -83,15 +83,26 @@ except Exception as e:
     app.logger.error(e)
     app.logger.error(u'cant read or write %s, using defaults' % appfile)
 
-# import plugins
-for plugin in cfg['plugins']:
-    path = os.path.join(u'mdchecker', u'plugins', plugin)
-    if os.path.isfile(path):
+import pkgutil
+path = os.path.join(os.path.dirname(__file__), u'plugins')
+modules = list(pkgutil.walk_packages([path]))
+module_names = [os.path.splitext(plugin)[0] for plugin in cfg['plugins']]
+
+for module in modules:
+    module_impoter = module[0]
+    module_name = module[1]
+
+    if module_name in module_names:
         try:
-            imp.load_source(plugin, path)
-            app.logger.info(u'module %s successfully loaded' % plugin)
+            module_loader = module_impoter.find_module(module_name)
+            module_loader.load_module(module_name)
+            module_names.remove(module_name)
+            app.logger.info(u'module %s successfully loaded' % module_name)
         except:
-            app.logger.error(u'module %s not loaded' % plugin)
+            app.logger.error(u'module %s not loaded' % module_name)
+
+if len(module_names) > 0:
+    app.logger.error(u'The following plugins have not been found: %s' % module_names)
 
 ### utility fn #######################################
 
