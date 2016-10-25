@@ -85,7 +85,7 @@ except Exception as e:
 
 # import plugins
 for plugin in cfg['plugins']:
-    path = os.path.join(u'mdchecker/plugins', plugin)
+    path = os.path.join(u'mdchecker', u'plugins', plugin)
     if os.path.isfile(path):
         try:
             imp.load_source(plugin, path)
@@ -238,7 +238,8 @@ class InspirobotWrapper(object):
         self.db = database
 
     def create_inspirobot_instance(self):
-        inspirobot = Inspirobot.Inspirobot()
+        cache_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, u'cache'))
+        inspirobot = Inspirobot.Inspirobot(cachepath=cache_path)
         if cfg.get('proxy', ''):
             inspirobot.setproxy(cfg['proxy'])
         return inspirobot
