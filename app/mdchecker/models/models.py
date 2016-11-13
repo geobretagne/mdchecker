@@ -128,9 +128,9 @@ class MdReport(db.Model):
     __tablename__ = 'md_report'
     id = db.Column(db.Integer, primary_key=True)
     test_session_id = db.Column(db.Integer, db.ForeignKey('test_session.id'))
-    test_session = db.relationship('TestSession', backref=db.backref('md_reports', lazy='dynamic'))
+    test_session = db.relationship('TestSession', backref=db.backref('md_reports', lazy='dynamic', cascade="all,delete"))
     md_id = db.Column(db.Integer, db.ForeignKey('resource_md.id'))
-    md = db.relationship('ResourceMd', backref=db.backref('resource_md', lazy='dynamic'))
+    md = db.relationship('ResourceMd', backref=db.backref('resource_md', lazy='dynamic', cascade="all,delete"))
     score = db.Column(db.Integer)
 
     def __init__(self, *args, **kwargs):
@@ -146,7 +146,7 @@ class UnitTestResult(db.Model):
     __tablename__ = 'unit_test_result'
     id = db.Column(db.Integer, primary_key=True)
     md_report_id = db.Column(db.Integer, db.ForeignKey('md_report.id'))
-    md_report = db.relationship('MdReport', backref=db.backref('unit_test_results', lazy='dynamic'))
+    md_report = db.relationship('MdReport', backref=db.backref('unit_test_results', lazy='dynamic', cascade="all,delete"))
     test_name = db.Column(db.String(16))
     test_abstract = db.Column(db.String(256))
     test_result_level = db.Column(db.String(16))

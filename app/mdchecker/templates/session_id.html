@@ -188,13 +188,13 @@
                     </a>
                 </li>
                 {% endif %}
-                <!--li role="separator" class="divider"></li>
+                <li role="separator" class="divider"></li>
                 <li>
-                    <a href="#">
+                    <a href="{{ url_for('session_delete', ids=session.id) }}">
                         <i class="glyphicon glyphicon-remove"></i> Supprimer cette session
                     </a>
                 </li>
-                <li>
+                <!--li>
                     <a href="#">
                         <i class="glyphicon glyphicon-remove"></i> Supprimer toutes les sessions identiques
                     </a>

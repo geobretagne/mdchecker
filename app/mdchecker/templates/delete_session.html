@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h2><small>Suppression de sessions</small></h2>
+
+    {% set ids = sessions|map(attribute='id')|join(',') %}
+    <form action="{{ url_for('session_delete', ids=ids) }}" method="post">
+        <fieldset>
+            <legend>Confirmez-vous la suppression des sessions suivantes&nbsp;?</legend>
+
+                {% if sessions|length > 0 %}
+                <div class="panel panel-default">
+                    <table class="table table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Catalogue</th>
+                                <th>Filtre - organisme</th>
+                                <th>Filtre - texte libre</th>
+                                <th>Nb fiches max</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                                {% set filter_dict = session.get_filter_as_dict() %}
+                                {% set cat = cfg.cats|selectattr("cswurl", "equalto", session.cat_url)|first %}
+                            <tr>
+                                <td><a href="{{ url_for('session_by_id', id=session.id) }}" class='clickable-row'>{{ session.id }}</a></td>
+                                <td>{% if cat|length > 0 %} {{ cat.name }} {% else %} <small>{{session.cat_url}}</small> {% endif %}</td>
+                                <td>{{ filter_dict['OrganisationName']|default('', true) }}</td>
+                                <td>{{ filter_dict['anytext']|default('', true) }}</td>
+                                <td>{{ session.max_harvest }}</td>
+                                <td>{{ session.date }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% else %}
+                <p>Aucune session de test ne correspond à votre requête</p>
+                {% endif %}
+
+            <button class="btn btn-danger" type="submit">Supprimer</button>
+            <a class="btn" href="{{ url_for('session_list') }}">Annuler</a>
+        </fieldset>
+     </form>
+
+{% endblock %}

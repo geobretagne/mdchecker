@@ -581,6 +581,24 @@ def new_session_creation():
         abort(500)
 
 
+@app.route("/sessions/delete/", methods=['GET', 'POST'])
+def session_delete():
+    print request.args.get('ids', "")
+    ids = request.args.get('ids', "").split(",")
+    sessions = TestSession.query.filter(TestSession.id.in_(ids)).all()
+
+    # Do remove the session records (POST)
+    if request.method == 'POST':
+        for session in sessions:
+            db.session.delete(session)
+            db.session.commit()
+
+        return redirect(url_for('session_list'))
+
+    # Ask for confirmation (GET)
+    return render_template('delete_session.html', sessions=sessions, cfg=cfg)
+
+
 @app.route("/sessions/")
 def session_list():
 

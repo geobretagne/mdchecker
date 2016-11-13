@@ -15,9 +15,9 @@
 
     <h2><small>Sessions précédentes</small></h2>
 
+    {% set sessions = object_list.items %}
+    {% if sessions|length > 0 %}
     <div class="panel panel-default">
-        {% set sessions = object_list.items %}
-        {% if sessions|length > 0 %}
         <table class="table table-hover table-condensed">
             <thead>
                 <tr>
@@ -44,10 +44,11 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
 
-        {% include "include_page_links.html" %}
+    {% include "include_page_links.html" %}
 
-        {% else %}
-        <p>Aucune session de test n'est présente en base de données</p>
-        {% endif %}
+    {% else %}
+    <p>Aucune session de test n'est présente en base de données</p>
+    {% endif %}
 {% endblock %}
