@@ -55,7 +55,7 @@
                 <div class="col-sm-6">
                     <table class="table">
                         <tbody>
-                            <tr><td>URL du catalogue analysé</td><td>{{cat.cswurl}}</td></tr>
+                            <tr><td>URL du catalogue analysé</td><td>{{ cat.cswurl }}</td></tr>
                             <tr><td>Date/heure de la session</td><td>{{ session.date.strftime('%Y-%m-%d %H:%M') }}</td></tr>
                             <!--tr><td>Filtre - organisme</td><td>{{ filter_dict['OrganisationName']|default('', true) }}</td></tr>
                             <tr><td>Filtre - texte libre</td><td>{{ filter_dict['anytext']|default('', true) }}</td></tr-->
@@ -117,7 +117,7 @@
                     </div>
                 </div>
 
-                <!-- hidden field to store the page number -->
+                <!-- hidden fields to store the page number, the test_filter and the level_filter params -->
                 <div class="form-group form-group-sm hidden">
                     <label for="page" class="col-sm-4 control-label">Mode d'affichage</label>
                     <div class="col-sm-8">
@@ -126,6 +126,28 @@
                             class="form-control"
                             placeholder="si vous voyez ce texte ce n'est pas normal"
                             value='{{page}}' />
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm hidden">
+                    <label for="test_filter" class="col-sm-4 control-label">Filtre sur le test</label>
+                    <div class="col-sm-8">
+                        <input type="text"
+                            name="test_filter"
+                            class="form-control"
+                            placeholder="si vous voyez ce texte ce n'est pas normal"
+                            value='{{test_filter}}' />
+                    </div>
+                </div>
+
+                <div class="form-group form-group-sm hidden">
+                    <label for="level_filter" class="col-sm-4 control-label">Filtre sur le niveau d'erreur</label>
+                    <div class="col-sm-8">
+                        <input type="text"
+                            name="level_filter"
+                            class="form-control"
+                            placeholder="si vous voyez ce texte ce n'est pas normal"
+                            value='{{level_filter}}' />
                     </div>
                 </div>
 
@@ -217,7 +239,15 @@
     <!-- test results -->
     {% set reports = object_list.items %}
     {% if reports|length < 1 %}
-    <p>Aucun résultat de test n'est présent en base de données pour cette session</p>
+        {% if test_filter or level_filter %}
+    <div class="alert alert-danger">
+        Aucun résultat de test ne correspond à votre recherche pour cette session.
+    </div>
+        {% else %}
+    <div class="alert alert-danger">
+        Aucun résultat de test n'est présent en base de données pour cette session.
+    </div>
+        {% endif %}
     {% else %}
         {% include "include_page_links.html" %}
         {% if display|default("cards", true) == "cards" %}
@@ -256,7 +286,7 @@
                     <!-- tests -->
                     <p class="md-test">
                         {% for t in report.unit_test_results:%}
-                        <a href="#" class="{{t.test_result_level}}" role="button" data-toggle="popover"  title="{{t.test_abstract}}">
+                        <a href="{{ modify_query(test_filter=t.test_name, level_filter=t.test_result_level) }}" class="{{t.test_result_level}}" role="button" data-toggle="popover"  title="{{t.test_abstract}}">
                             {{t.test_name}}
                             <span style="display: none">
                                 {{t.test_result_level}}&nbsp;: {{t.test_result_text}}

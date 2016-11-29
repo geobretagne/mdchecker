@@ -15,11 +15,23 @@
                 {% if page == object_list.page %}
                     <a href="#">{{ page }}<span class="sr-only">(current)</span></a>
                 {% else %}
-                    {% if display %}
-                    <a href="./?page={{ page }}&sort_by={{sort_by}}&order={{order}}&display={{display}}">{{ page }}</a>
-                    {% else %}
-                    <a href="./?page={{ page }}&sort_by={{sort_by}}&order={{order}}">{{ page }}</a>
+                    {% set link="./?page=" + page|string %}
+                    {% if sort_by %}
+                        {% set link = link + "&sort_by=" + sort_by %}
                     {% endif %}
+                    {% if order %}
+                        {% set link = link + "&order=" + order %}
+                    {% endif %}
+                    {% if display %}
+                        {% set link = link + "&display=" + display %}
+                    {% endif %}
+                    {% if level_filter %}
+                        {% set link = link + "&level_filter=" + level_filter %}
+                    {% endif %}
+                    {% if test_filter %}
+                        {% set link = link + "&test_filter=" + test_filter %}
+                    {% endif %}
+                    <a href="{{link}}">{{ page }}</a>
                 {% endif %}
             {% else %}
                 <a class="disabled">...</a>

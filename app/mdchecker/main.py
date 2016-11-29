@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import imp
 import os
 import io
 import csv
@@ -17,6 +16,8 @@ from flask import url_for
 from flask import redirect
 from flask import abort
 from flask import jsonify
+
+from werkzeug import url_encode
 
 from inspirobot import Inspirobot
 
@@ -620,6 +621,15 @@ def session_by_id(id=None):
 
     page = request.args.get('page')
     display = request.args.get('display')
+
+    # Filter on a specific unit test
+    test_filter = request.args.get('test_filter')
+
+    # Filter on a specific error level
+    level_filter = request.args.get('level_filter')
+    if level_filter:
+        level_filter = level_filter.lower().strip()
+
     request_sort_by = request.args.get('sort_by')
     if request_sort_by:
         request_sort_by = request_sort_by.lower().strip()
@@ -632,39 +642,61 @@ def session_by_id(id=None):
     else:
         order = "asc"
 
+    query = session.md_reports
+
+    # Subquery for identifying which MdReport instances have unit test results with the right
+    # test_result_level and test_name values
+    if test_filter and level_filter:
+        mdr_query = session.md_reports.join(UnitTestResult).filter(
+            UnitTestResult.test_name==test_filter, UnitTestResult.test_result_level==level_filter)
+    elif test_filter:
+        mdr_query = session.md_reports.join(UnitTestResult).filter(
+            UnitTestResult.test_name==test_filter, UnitTestResult.test_result_level.in_([u"error", u"warning"]))
+    elif level_filter:
+        mdr_query = session.md_reports.join(UnitTestResult).filter(
+            UnitTestResult.test_result_level==level_filter)
+    else:
+        mdr_query = None
+
+    if mdr_query:
+        report_ids = [report.id for report in mdr_query.all()]
+        query = query.filter(MdReport.id.in_(report_ids))
+
     if sort_by == "id":
         if order == "asc":
-            query = session.md_reports.join(ResourceMd).order_by("file_id")
+            query = query.join(ResourceMd).order_by("file_id")
         else:
-            query = session.md_reports.join(ResourceMd).order_by("file_id desc")
+            query = query.join(ResourceMd).order_by("file_id desc")
 
     elif sort_by == "score":
         if order == "asc":
-            query = session.md_reports.order_by(MdReport.score)
+            query = query.order_by(MdReport.score)
         else:
-            query = session.md_reports.order_by(MdReport.score.desc())
+            query = query.order_by(MdReport.score.desc())
 
     elif sort_by == "title":
         if order == "asc":
-            query = session.md_reports.join(ResourceMd).order_by("res_title")
+            query = query.join(ResourceMd).order_by("res_title")
         else:
-            query = session.md_reports.join(ResourceMd).order_by("res_title desc")
+            query = query.join(ResourceMd).order_by("res_title desc")
 
     elif sort_by == "organisation":
         if order == "asc":
-            query = session.md_reports.join(ResourceMd).order_by("res_organisation_name")
+            query = query.join(ResourceMd).order_by("res_organisation_name")
         else:
-            query = session.md_reports.join(ResourceMd).order_by("res_organisation_name desc")
+            query = query.join(ResourceMd).order_by("res_organisation_name desc")
 
     elif sort_by == "date":
         if order == "asc":
-            query = session.md_reports.join(ResourceMd).order_by("md_date")
+            query = query.join(ResourceMd).order_by("md_date")
         else:
-            query = session.md_reports.join(ResourceMd).order_by("md_date desc")
+            query = query.join(ResourceMd).order_by("md_date desc")
 
     cat = get_cat_with_url(session.cat_url)
     return object_list('session_id.html', query, cat=cat, cfg=cfg, session=session,
-                       sort_by=sort_by, order=order, display=display, page=page)
+                       sort_by=sort_by, order=order,
+                       test_filter=test_filter, level_filter=level_filter,
+                       display=display, page=page)
 
 
 @app.route("/test_description/")
@@ -695,4 +727,15 @@ def object_list(template_name, query, paginate_by=10, **context):
         page = 1
 
     object_list = query.paginate(page, paginate_by)
+
     return render_template(template_name, object_list=object_list, **context)
+
+
+@app.template_global()
+def modify_query(**new_values):
+    args = request.args.copy()
+
+    for key, value in new_values.items():
+        args[key] = value
+
+    return '{}?{}'.format(request.path, url_encode(args))

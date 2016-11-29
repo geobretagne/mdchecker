@@ -1,6 +1,6 @@
 from mdchecker.main import db
 from sqlalchemy import func
-
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 def get_organisation_names_like(q):
     query = ResourceMd.query
@@ -87,13 +87,13 @@ class TestSession(db.Model):
         filter_items = self.filter.split("&")
         filter_items = [filter_item.strip() for filter_item in filter_items if len(filter_item.strip()) != 0]
 
-        dict = {}
+        filter_dict = {}
         for filter_item in filter_items:
             key, value = filter_item.split("=")
 
             if key and key.strip() and value and value.strip():
-                dict[key.strip()] = value.strip()
-        return dict
+                filter_dict[key.strip()] = value.strip()
+        return filter_dict
 
     def get_previous_session(self):
 
