@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.INFO)
 # and app.json.DIST into app.json for app config
 #
 cfg = {
-    'proxy': '',
+    "proxy": "",
     "cats": [
         {
             "name": u"GéoBretagne",
@@ -47,13 +47,13 @@ cfg = {
         }
     ],
 
-    'maxrecords':    20,
-    'maxharvest':    250,
-    'maxmaxharvest': 2000,
-    'sortby':        'score',
-    'ns': {
-        'gmd': u'http://www.isotc211.org/2005/gmd',
-        'gco': u'http://www.isotc211.org/2005/gco'
+    "maxrecords":    20,
+    "maxharvest":    250,
+    "maxmaxharvest": 2000,
+    "sortby":        "score",
+    "ns": {
+        "gmd": u"http://www.isotc211.org/2005/gmd",
+        "gco": u"http://www.isotc211.org/2005/gco"
     },
     "plugins": [
         "testSpatial.py",
@@ -65,7 +65,7 @@ cfg = {
         "testDigitalTransferOptions.py",
         "testDefault.py"
     ],
-    'mail_md': u"""la_metadonnee
+    "mail_md": u"""la_metadonnee
 %s%s
 a_recu_un_score_de
 %s/100
@@ -73,21 +73,21 @@ et_merite_votre_attention"""
 }
 
 # loads app file configuration, dumps a fresh one if missing
-appfile = os.path.join(os.path.dirname(__file__), 'conf', 'app.json')
+appfile = os.path.join(os.path.dirname(__file__), "conf", "app.json")
 try:
     if not(os.path.isfile(appfile)):
-        f = open(appfile, 'w')
+        f = open(appfile, "w")
         json.dump(cfg, f, indent=True)
         f.close()
     cfg.update(json.load(open(appfile)))
 except Exception as e:
     app.logger.error(e)
-    app.logger.error(u'cant read or write %s, using defaults' % appfile)
+    app.logger.error(u"cant read or write %s, using defaults" % appfile)
 
 import pkgutil
-path = os.path.join(os.path.dirname(__file__), u'plugins')
+path = os.path.join(os.path.dirname(__file__), u"plugins")
 modules = list(pkgutil.walk_packages([path]))
-module_names = [os.path.splitext(plugin)[0] for plugin in cfg['plugins']]
+module_names = [os.path.splitext(plugin)[0] for plugin in cfg["plugins"]]
 
 for module in modules:
     module_impoter = module[0]
@@ -98,12 +98,12 @@ for module in modules:
             module_loader = module_impoter.find_module(module_name)
             module_loader.load_module(module_name)
             module_names.remove(module_name)
-            app.logger.info(u'module %s successfully loaded' % module_name)
+            app.logger.info(u"module %s successfully loaded" % module_name)
         except:
-            app.logger.error(u'module %s not loaded' % module_name)
+            app.logger.error(u"module %s not loaded" % module_name)
 
 if len(module_names) > 0:
-    app.logger.error(u'The following plugins have not been found: %s' % module_names)
+    app.logger.error(u"The following plugins have not been found: %s" % module_names)
 
 ### utility fn #######################################
 
@@ -113,19 +113,19 @@ def u(s):
     decodes utf8
     """
     if isinstance(s, unicode): 
-        return s.encode('utf-8')
+        return s.encode("utf-8")
     if isinstance(s, str):
-        return s.decode('utf-8')
+        return s.decode("utf-8")
     # fix this, item may be unicode
     elif isinstance(s, list):
-        return [i.decode('utf-8') for i in s]
+        return [i.decode("utf-8") for i in s]
 
 
 def xmlGetTextNodes(doc, xpath):
     """
     shorthand to retrieve serialized text nodes matching a specific xpath
     """
-    return ', '.join(doc.xpath(xpath, namespaces=cfg['ns']))
+    return ", ".join(doc.xpath(xpath, namespaces=cfg["ns"]))
 
 
 def getPermalink(args):
@@ -135,10 +135,10 @@ def getPermalink(args):
     escaped = {}
     for k, v in args.iteritems():
         if isinstance(v, unicode):
-            escaped[k] = v.encode('utf8')
+            escaped[k] = v.encode("utf8")
         else:
             escaped[k] = str(v)
-    return '.?'+urllib.urlencode(escaped)
+    return ".?"+urllib.urlencode(escaped)
 
 
 def getMdUnitTests():
@@ -194,41 +194,41 @@ def getArgsFromQuery(request):
     args = {}
 
     # missing validation
-    args['OrganisationName'] = request.args.get('OrganisationName', '')
+    args["OrganisationName"] = request.args.get("OrganisationName", "")
 
     # missing validation
-    args['anytext'] = request.args.get('anytext', '')
+    args["anytext"] = request.args.get("anytext", "")
 
     if request.path == "/quick_test/":
         # missing validation
-        args['format'] = request.args.get('format', '')
+        args["format"] = request.args.get("format", "")
 
         # missing validation
-        args['id'] = request.args.get('id', '')
+        args["id"] = request.args.get("id", "")
 
-        if request.args.get('sortby') in ['score', 'uuid', 'title', 'OrganisationName', 'date']:
-            args['sortby'] = request.args.get('sortby')
+        if request.args.get("sortby") in ["score", "uuid", "title", "OrganisationName", "date"]:
+            args["sortby"] = request.args.get("sortby")
 
-        args['nextrecord'] = int(request.args.get('nextrecord', default=0, type=int))
+        args["nextrecord"] = int(request.args.get("nextrecord", default=0, type=int))
 
-        args['maxharvest'] = min(int(request.args.get(
-            'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
+        args["maxharvest"] = min(int(request.args.get(
+            "maxharvest", default=cfg["maxharvest"], type=int)), cfg["maxmaxharvest"])
 
-        args['cswurl'] = get_cat_with_name(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
+        args["cswurl"] = get_cat_with_name(request.args.get("cat", cfg["cats"][0]["name"]))["cswurl"]
 
     elif request.path == "/new_session/creation/":
 
-        args['maxharvest'] = min(int(request.args.get(
-            'maxharvest', default=cfg['maxharvest'], type=int)), cfg['maxmaxharvest'])
+        args["maxharvest"] = min(int(request.args.get(
+            "maxharvest", default=cfg["maxharvest"], type=int)), cfg["maxmaxharvest"])
 
-        args['cswurl'] = get_cat_with_name(request.args.get('cat', cfg["cats"][0]["name"]))["cswurl"]
+        args["cswurl"] = get_cat_with_name(request.args.get("cat", cfg["cats"][0]["name"]))["cswurl"]
 
     return args
 
 
 def doWeNeedToProcessRequest(request):
-    return ('OrganisationName' in request.args or 'anytext' in request.args or
-            'id' in request.args or 'format' in request.args)
+    return ("OrganisationName" in request.args or "anytext" in request.args or
+            "id" in request.args or "format" in request.args)
 
 
 class InspirobotWrapper(object):
@@ -250,20 +250,20 @@ class InspirobotWrapper(object):
         self.db = database
 
     def create_inspirobot_instance(self):
-        cache_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, u'cache'))
+        cache_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, u"cache"))
         inspirobot = Inspirobot.Inspirobot(cachepath=cache_path)
-        if cfg.get('proxy', ''):
-            inspirobot.setproxy(cfg['proxy'])
+        if cfg.get("proxy", ""):
+            inspirobot.setproxy(cfg["proxy"])
         return inspirobot
 
     def build_inspirobot_constraints(self):
 
         constraints_inspirobot = u"Type = dataset  && anytext = %(anytext)s" % self.test_params
 
-        if self.test_params.get('OrganisationName', None) is not None:
+        if self.test_params.get("OrganisationName", None) is not None:
             constraints_inspirobot += u" && OrganisationName = %(OrganisationName)s" % self.test_params
 
-        if self.test_params.get('id', None) is not None:
+        if self.test_params.get("id", None) is not None:
             constraints_inspirobot += u" && Identifier = %(id)s" % self.test_params
 
         self.constraints_str = constraints_inspirobot
@@ -274,17 +274,17 @@ class InspirobotWrapper(object):
         # get match count
         count = self.inspirobot.mdcount(
             self.test_params["cswurl"], constraints=self.constraints_fes,
-            startrecord=self.test_params['nextrecord'],
-            maxharvest=self.test_params['maxharvest'])
+            startrecord=self.test_params["nextrecord"],
+            maxharvest=self.test_params["maxharvest"])
 
         # get metadatas
         self.md_records = self.inspirobot.mdsearch(
             self.test_params["cswurl"],
-            esn='full',
+            esn="full",
             constraints=self.constraints_fes,
-            startrecord=self.test_params['nextrecord'],
-            maxrecords=cfg['maxrecords'],
-            maxharvest=self.test_params['maxharvest']
+            startrecord=self.test_params["nextrecord"],
+            maxrecords=cfg["maxrecords"],
+            maxharvest=self.test_params["maxharvest"]
         )
 
         self.run_tests_on_md_records()
@@ -293,15 +293,15 @@ class InspirobotWrapper(object):
 
         # metadata order
         obsolete_date = datetime.datetime(1970,1,1)
-        if self.test_params['sortby'] == 'score':
-            self.metadatas.sort(key=operator.attrgetter('score'))
-        elif self.test_params['sortby'] == 'uuid':
-            self.metadatas.sort(key=operator.attrgetter('fileIdentifier'))
-        elif self.test_params['sortby'] == 'title':
-            self.metadatas.sort(key=operator.attrgetter('title'))
-        elif self.test_params['sortby'] == 'OrganisationName':
-            self.metadatas.sort(key=operator.attrgetter('OrganisationName'))
-        elif self.test_params['sortby'] == 'date':
+        if self.test_params["sortby"] == "score":
+            self.metadatas.sort(key=operator.attrgetter("score"))
+        elif self.test_params["sortby"] == "uuid":
+            self.metadatas.sort(key=operator.attrgetter("fileIdentifier"))
+        elif self.test_params["sortby"] == "title":
+            self.metadatas.sort(key=operator.attrgetter("title"))
+        elif self.test_params["sortby"] == "OrganisationName":
+            self.metadatas.sort(key=operator.attrgetter("OrganisationName"))
+        elif self.test_params["sortby"] == "date":
             self.metadatas.sort(key=lambda x: x.date or obsolete_date)
 
         return self.metadatas, count, score
@@ -319,9 +319,9 @@ class InspirobotWrapper(object):
 
         # update maxharvest
         max_harvest = None
-        if not ('maxharvest' in self.test_params and isinstance(self.test_params["maxharvest"], (int, long))):
+        if not ("maxharvest" in self.test_params and isinstance(self.test_params["maxharvest"], (int, long))):
             if isinstance(self.test_params["maxharvest"], (str, unicode)) and \
-                    self.test_params["maxharvest"].strip().lower() == 'all':
+                    self.test_params["maxharvest"].strip().lower() == "all":
                 max_harvest = count["matches"]
             else:
                 max_harvest = cfg["maxharvest"]
@@ -334,16 +334,16 @@ class InspirobotWrapper(object):
         else:
             max_harvest = self.test_params["maxharvest"]
 
-        if count['matches'] == 0:
+        if count["matches"] == 0:
             max_harvest = 1
 
         # get metadata records
         self.md_records = self.inspirobot.mdsearch(
             self.test_params["cswurl"],
-            esn='full',
+            esn="full",
             constraints=self.constraints_fes,
             startrecord=0,
-            maxrecords=cfg['maxrecords'],
+            maxrecords=cfg["maxrecords"],
             maxharvest=max_harvest
         )
 
@@ -434,25 +434,25 @@ class InspirobotWrapper(object):
 
 
 ### routes ######################################
-@app.route('/md/')
-@app.route('/md/<md_id>')
-@app.route('/md/<md_id>/<format>')
-def byId(md_id='', format='html'):
+@app.route("/md/")
+@app.route("/md/<md_id>")
+@app.route("/md/<md_id>/<format>")
+def byId(md_id="", format="html"):
     args = {
-        'OrganisationName': '',
-        'anytext':          '',
-        'maxharvest':       cfg['maxharvest'],
-        'sortby':           cfg['sortby'],
-        'nextrecord':       0,
-        'id':               md_id,
-        'roles':            [],
-        'format':           format
+        "OrganisationName": "",
+        "anytext":          "",
+        "maxharvest":       cfg["maxharvest"],
+        "sortby":           cfg["sortby"],
+        "nextrecord":       0,
+        "id":               md_id,
+        "roles":            [],
+        "format":           format
     }
     mdUnitTests = getMdUnitTests()
     ins_wrapper = InspirobotWrapper(args, mdUnitTests)
     metadatas, count, score = ins_wrapper.run_unrecorded_tests()
 
-    if args['format'] == 'json':
+    if args["format"] == "json":
         return jsonify(
             matches=count,
             score=score,
@@ -461,61 +461,61 @@ def byId(md_id='', format='html'):
     else:
         # paging for html
         pageUrls = [(n, getPermalink({
-            'OrganisationName': args['OrganisationName'],
-            'nextrecord':n*args['maxharvest'],
-            'maxharvest':args['maxharvest']}))
-            for n in range(1+count['matches'] // args['maxharvest'])
+            "OrganisationName": args["OrganisationName"],
+            "nextrecord":n*args["maxharvest"],
+            "maxharvest":args["maxharvest"]}))
+            for n in range(1+count["matches"] // args["maxharvest"])
         ]
         cat = get_cat_with_url(args["cswurl"])
         return render_template(
-            'quick_test.html', cfg=cfg, cat=cat, args=args, score=score,
+            "quick_test.html", cfg=cfg, cat=cat, args=args, score=score,
             metas=metadatas, tests=mdUnitTests, count=count, pages=pageUrls)
 
 
 @app.route("/")
 def index():
-    return render_template('index.html', cfg=cfg)
+    return render_template("index.html", cfg=cfg)
 
 
 @app.route("/quick_test/")
 def quick_test():
     args = {
-        'OrganisationName': '',
-        'anytext':          '',
-        'maxharvest':       cfg['maxharvest'],
-        'sortby':           cfg['sortby'],
-        'nextrecord':       0,
-        'id':               '',
-        'roles':            [],
-        'format':           'html'
+        "OrganisationName": "",
+        "anytext":          "",
+        "maxharvest":       cfg["maxharvest"],
+        "sortby":           cfg["sortby"],
+        "nextrecord":       0,
+        "id":               "",
+        "roles":            [],
+        "format":           "html"
     }
     mdUnitTests = getMdUnitTests()
     metadatas = []
-    count = {'matches': 0, 'returned': 0}
+    count = {"matches": 0, "returned": 0}
     score = 0
 
     # querystring parser
     args.update(getArgsFromQuery(request))
     
     # bulk export
-    if args['format'] in ['json', 'csv']:
-        args['maxharvest'] = cfg['maxmaxharvest']
+    if args["format"] in ["json", "csv"]:
+        args["maxharvest"] = cfg["maxmaxharvest"]
 
     if doWeNeedToProcessRequest(request):
         ins_wrapper = InspirobotWrapper(args, mdUnitTests)
         metadatas, count, score = ins_wrapper.run_unrecorded_tests()
 
-    if args['format'] == 'json':
+    if args["format"] == "json":
         return jsonify(
             matches=count,
             score=score,
             metadatas=[md.asDict() for md in metadatas]
         )
-    elif args['format'] == 'csv':
+    elif args["format"] == "csv":
             cat = get_cat_with_url(args["cswurl"])
             output = io.BytesIO()
             writer = csv.writer(output, dialect=csv.excel)
-            writer.writerow(('score', 'date', 'md_date', 'organisation', 'title', 'html', 'xml', 'report'))
+            writer.writerow(("score", "date", "md_date", "organisation", "title", "html", "xml", "report"))
             for md in metadatas:
                 results_as_string = []
 
@@ -541,28 +541,28 @@ def quick_test():
                     u(report_as_string)
                 )
                 writer.writerow(values)
-            return Response(output.getvalue(), mimetype='text/csv')
+            return Response(output.getvalue(), mimetype="text/csv")
     else:
         cat = get_cat_with_url(args["cswurl"])
 
         # paging for html
         pageUrls = [(n, getPermalink({
-            'cat': cat["name"],
-            'OrganisationName': args['OrganisationName'],
-            'anytext': args['anytext'],
-            'nextrecord':n*args['maxharvest'],
-            'maxharvest':args['maxharvest']}))
-            for n in range(1+count['matches'] // args['maxharvest'])
+            "cat": cat["name"],
+            "OrganisationName": args["OrganisationName"],
+            "anytext": args["anytext"],
+            "nextrecord":n*args["maxharvest"],
+            "maxharvest":args["maxharvest"]}))
+            for n in range(1+count["matches"] // args["maxharvest"])
         ]
 
         return render_template(
-            'quick_test.html', cfg=cfg, cat=cat, args=args, score=score,
+            "quick_test.html", cfg=cfg, cat=cat, args=args, score=score,
             metas=metadatas, count=count, pages=pageUrls)
 
 
 @app.route("/new_session/")
 def new_session():
-    return render_template('new_session.html', cfg=cfg)
+    return render_template("new_session.html", cfg=cfg)
 
 
 @app.route("/new_session/creation/")
@@ -582,29 +582,29 @@ def new_session_creation():
         abort(500)
 
 
-@app.route("/sessions/delete/", methods=['GET', 'POST'])
+@app.route("/sessions/delete/", methods=["GET", "POST"])
 def session_delete():
-    print request.args.get('ids', "")
-    ids = request.args.get('ids', "").split(",")
+    print request.args.get("ids", "")
+    ids = request.args.get("ids", "").split(",")
     sessions = TestSession.query.filter(TestSession.id.in_(ids)).all()
 
     # Do remove the session records (POST)
-    if request.method == 'POST':
+    if request.method == "POST":
         for session in sessions:
             db.session.delete(session)
             db.session.commit()
 
-        return redirect(url_for('session_list'))
+        return redirect(url_for("session_list"))
 
     # Ask for confirmation (GET)
-    return render_template('delete_session.html', sessions=sessions, cfg=cfg)
+    return render_template("delete_session.html", sessions=sessions, cfg=cfg)
 
 
 @app.route("/sessions/")
 def session_list():
 
     sessions = TestSession.query.order_by(TestSession.date.desc())
-    return object_list('session_list.html', sessions, cfg=cfg)
+    return object_list("session_list.html", sessions, cfg=cfg)
 
 
 @app.route("/session/<id>/")
@@ -619,24 +619,24 @@ def session_by_id(id=None):
 
     sort_by = "score"
 
-    page = request.args.get('page')
-    display = request.args.get('display')
+    page = request.args.get("page")
+    display = request.args.get("display")
 
     # Filter on a specific unit test
-    test_filter = request.args.get('test_filter')
+    test_filter = request.args.get("test_filter")
 
     # Filter on a specific error level
-    level_filter = request.args.get('level_filter')
+    level_filter = request.args.get("level_filter")
     if level_filter:
         level_filter = level_filter.lower().strip()
 
-    request_sort_by = request.args.get('sort_by')
+    request_sort_by = request.args.get("sort_by")
     if request_sort_by:
         request_sort_by = request_sort_by.lower().strip()
         if request_sort_by in ("id", "title", "score", "organisation", "date"):
             sort_by = request_sort_by
 
-    request_order = request.args.get('order')
+    request_order = request.args.get("order")
     if request_order and request_order.lower().strip() == "desc":
         order = "desc"
     else:
@@ -693,7 +693,7 @@ def session_by_id(id=None):
             query = query.join(ResourceMd).order_by("md_date desc")
 
     cat = get_cat_with_url(session.cat_url)
-    return object_list('session_id.html', query, cat=cat, cfg=cfg, session=session,
+    return object_list("session_id.html", query, cat=cat, cfg=cfg, session=session,
                        sort_by=sort_by, order=order,
                        test_filter=test_filter, level_filter=level_filter,
                        display=display, page=page)
@@ -703,12 +703,12 @@ def session_by_id(id=None):
 def test_description():
     mdUnitTests = getMdUnitTests()
 
-    return render_template('test_description.html', cfg=cfg, tests=mdUnitTests)
+    return render_template("test_description.html", cfg=cfg, tests=mdUnitTests)
 
 
-@app.route('/organisation_names/', methods=['GET'])
+@app.route("/organisation_names/", methods=["GET"])
 def organisation_names_autocomplete():
-    q = request.args.get('q', '')
+    q = request.args.get("q", "")
     results = get_organisation_names_like(q)
     return jsonify(results)
 
@@ -720,7 +720,7 @@ def page_not_found(e):
 
 
 def object_list(template_name, query, paginate_by=10, **context):
-    page = request.args.get('page')
+    page = request.args.get("page")
     if page and page.isdigit():
         page = int(page)
     else:
@@ -738,4 +738,4 @@ def modify_query(**new_values):
     for key, value in new_values.items():
         args[key] = value
 
-    return '{}?{}'.format(request.path, url_encode(args))
+    return "{}?{}".format(request.path, url_encode(args))
