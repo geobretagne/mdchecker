@@ -1,6 +1,5 @@
 from mdchecker.main import db
 from sqlalchemy import func
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 def get_organisation_names_like(q):
     query = ResourceMd.query
