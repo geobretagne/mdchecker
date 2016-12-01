@@ -216,6 +216,9 @@ def getArgsFromQuery(request):
 
         args["cswurl"] = get_cat_with_name(request.args.get("cat", cfg["cats"][0]["name"]))["cswurl"]
 
+    elif request.path.split('/')[1] == "md":
+        args["cswurl"] = get_cat_with_name(request.args.get("cat", cfg["cats"][0]["name"]))["cswurl"]
+
     elif request.path == "/new_session/creation/":
 
         args["maxharvest"] = min(int(request.args.get(
@@ -448,6 +451,7 @@ def byId(md_id="", format="html"):
         "roles":            [],
         "format":           format
     }
+    args.update(getArgsFromQuery(request))
     mdUnitTests = getMdUnitTests()
     ins_wrapper = InspirobotWrapper(args, mdUnitTests)
     metadatas, count, score = ins_wrapper.run_unrecorded_tests()
