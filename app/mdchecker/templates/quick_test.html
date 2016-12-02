@@ -193,17 +193,17 @@
     </p>
 
     <!-- pagination -->
-    <ul class="pagination pagination-sm">
+    <nav aria-label="...">
+        <ul class="pagination pagination-sm">
         {%for p in pages %}
-            {% set a = p[0]*args.maxharvest %}
-            {% set b = (p[0]+1)*args.maxharvest-1 %}
-        {% if a==args.nextrecord %}
-        <li class="active"><a href="{{p[1]}}">{{a}}-{{b}}</a></li>
-        {% else %}
-        <li><a href="{{p[1]}}">{{a}}-{{b}}</a></li>
-        {% endif %}
+            {% if p[0]*args.maxharvest==args.nextrecord %}
+            <li class="active"><a href="{{p[1]}}">{{p[0]+1}}</a></li>
+            {% else %}
+            <li><a href="{{p[1]}}">{{p[0]+1}}</a></li>
+            {% endif %}
         {% endfor %}
-    </ul>
+        </ul>
+    </nav>
     {% endif %}
 
     <!-- test results -->
