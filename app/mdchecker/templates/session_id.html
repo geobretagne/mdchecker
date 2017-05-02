@@ -272,7 +272,7 @@
             <div class="panel panel-default md-md {{rank}}">
                 <div class="panel-heading">
                     <div class="md-score">
-                        <a href="/md/{{md.file_id}}/html" class="md-retest badge">{{report.score}}</a>
+                        <a href="{{ url_for('byId', md_id=md.file_id, format='html') }}" class="md-retest badge">{{report.score}}</a>
                     </div>
                     <a class="md-bt" href="{{cat.viewurlprefix}}{{md.file_id}}" target="_blank" title="view html">{{md.res_title}}</a>
                     <a class="md-bt" href="{{cat.xmlurlprefix}}{{md.file_id}}" target="_blank" title="view xml">xml</a>

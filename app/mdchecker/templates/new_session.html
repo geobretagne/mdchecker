@@ -29,7 +29,7 @@
             $('#orgnameinput.typeahead').typeahead({
                 minLength: 2,
                 source:  function (query, process) {
-                    return $.get('{{url_for('organisation_names_autocomplete')}}', { q: query }, function (data) {
+                    return $.get('{{ url_for('organisation_names_autocomplete') }}', { q: query }, function (data) {
                         return process(data);
                     });
                 }
@@ -43,7 +43,7 @@
 
     <h2><small>Nouvelle session</small></h2>
 
-    <form class="form-horizontal" method="GET" action="/new_session/creation/">
+    <form class="form-horizontal" method="GET" action="{{ url_for('new_session_creation') }}">
 
         <!-- catalogue -->
         <div class="form-group">
