@@ -742,4 +742,4 @@ def modify_query(**new_values):
     for key, value in new_values.items():
         args[key] = value
 
-    return "{}?{}".format(request.path, url_encode(args))
+    return "{}{}?{}".format(request.script_root, request.path, url_encode(args))
