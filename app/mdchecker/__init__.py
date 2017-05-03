@@ -1,8 +1,10 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from reverse_proxied import ReverseProxied
 import os
 
 app = Flask(__name__)
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 app.jinja_env.add_extension('jinja2.ext.do')
 
 # http://flask.pocoo.org/docs/0.10/config/#builtin-configuration-values
