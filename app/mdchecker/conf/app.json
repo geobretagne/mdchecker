@@ -1,0 +1,30 @@
+{
+ "maxmaxharvest": 2000, 
+ "maxharvest": 250,
+ "cats": [
+   {
+     "name": "GéoBretagne",
+     "cswurl": "https://geobretagne.fr/geonetwork/srv/fre/csw",
+     "xmlurlprefix": "https://geobretagne.fr/geonetwork/srv/fre/xml.metadata.get?uuid=",
+     "viewurlprefix": "https://geobretagne.fr/geonetwork/srv/fre/catalog.search#/metadata/"
+   }
+ ],
+ "proxy": "",
+ "plugins": [
+  "testSpatial.py", 
+  "testGenealogy.py", 
+  "testMD_Identifier.py", 
+  "testContact.py", 
+  "testLicence.py", 
+  "testInspireKeyword.py", 
+  "testDigitalTransferOptions.py", 
+  "testDefault.py"
+ ], 
+ "mail_md": "la_metadonnee\n%s%s\na_recu_un_score_de\n%s/100\net_merite_votre_attention", 
+ "maxrecords": 20,
+ "sortby": "score", 
+ "ns": {
+  "gco": "http://www.isotc211.org/2005/gco", 
+  "gmd": "http://www.isotc211.org/2005/gmd"
+ }
+}
