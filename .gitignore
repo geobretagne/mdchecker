@@ -1,5 +1,3 @@
-app/mdchecker/conf/*.json
-app/mdchecker/conf/*.cfg
 *.pyc
 
 # database file
@@ -7,14 +5,3 @@ app/mdchecker/db/*.db
 
 # virtualenv dir
 venv/*
-
-# IntelliJ project files
-.idea
-*.iml
-out
-gen
-
-# OSX template
-.DS_Store
-.AppleDouble
-.LSOverride
