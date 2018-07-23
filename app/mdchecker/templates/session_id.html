@@ -119,13 +119,13 @@
 
                 <!-- hidden fields to store the page number, the test_filter and the level_filter params -->
                 <div class="form-group form-group-sm hidden">
-                    <label for="page" class="col-sm-4 control-label">Mode d'affichage</label>
+                    <label for="page" class="col-sm-4 control-label">Page</label>
                     <div class="col-sm-8">
                         <input type="text"
                             name="page"
                             class="form-control"
                             placeholder="si vous voyez ce texte ce n'est pas normal"
-                            value='{{page}}' />
+                            value='{{ page if page != None }}' />
                     </div>
                 </div>
 
@@ -136,7 +136,7 @@
                             name="test_filter"
                             class="form-control"
                             placeholder="si vous voyez ce texte ce n'est pas normal"
-                            value='{{test_filter}}' />
+                            value='{{ test_filter if test_filter != None }}' />
                     </div>
                 </div>
 
@@ -147,7 +147,7 @@
                             name="level_filter"
                             class="form-control"
                             placeholder="si vous voyez ce texte ce n'est pas normal"
-                            value='{{level_filter}}' />
+                            value='{{ level_filter if level_filter != None }}' />
                     </div>
                 </div>
 
